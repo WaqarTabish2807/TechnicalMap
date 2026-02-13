@@ -1,0 +1,197 @@
+---
+title: "OpenClaw Tutorial: Installation to First Chat Setup"
+blurb: "Set up OpenClaw bot in 20 minutes. Complete guide to install, configure, and chat with your local AI agent via Telegram."
+description: "A complete guide to installing and setting up OpenClaw, a local AI agent."
+publishedAt: "2026-02-13"
+editedAt: "2026-02-13"
+---
+
+## What is OpenClaw AI
+
+[Openclaw](https://openclaw.ai/) (formerly Moltbot, formerly Clawbot) is a conversation-first AI bot that runs locally on your system and connects to messaging platforms like Telegram, WhatsApp, or Discord. In this tutorial, you’ll learn how to install Openclaw, configure it with your preferred AI model, and start chatting with it in under 20 minutes.
+
+Openclaw is made by Peter Steinberger and is open sourced on [GitHub](https://github.com/Openclaw/Openclaw). What makes this bot different from other bots? While most bots are configuration-first, Openclaw is conversation-first. You interact with Openclaw through natural language rather than complex configuration files, making it accessible even for non-developers.
+
+Note: While this article was being written, the project went through another naming change. After previously rebranding from ClawdBot to MoltBot due to a trademark concern, the project has since been renamed again to OpenClaw (while keeping the lobster mascot). As a result, some screenshots, configuration paths, or code snippets in this tutorial may still reference earlier names such as “ClawdBot,” or “MoltBot.”
+
+## OpenClaw prerequisites: What you need before setup
+
+We are assuming that:
+
+- You have a Telegram account
+- You’re comfortable using the [terminal](https://www.codecademy.com/resources/docs/command-line/terminal)
+- [Node.js](https://nodejs.org/en/download) is installed on your system
+
+Let’s now start with the setup of our bot.
+
+## How to setup and install Openclaw?
+
+To install Openclaw, open your terminal and run this command:
+
+```bash
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+That’s it. The installer will automatically detect your operating system and will verify if everything is running perfectly. Once the setup is done, you’ll see progress output confirming installation and version details.
+
+The Openclaw installer handles everything automatically with no repository cloning or manual configuration needed at this stage. After installation is done, Openclaw launches an interactive terminal UI (TUI).
+
+This is where most of the setup happens and where Openclaw quietly removes a lot of complexity.
+
+You’ll be asked to:
+
+- confirm you want to continue
+- choose an onboarding mode
+
+Select **QuickStart** by pressing the spacebar on your keyboard and pressing enter.
+
+QuickStart configures everything with safe defaults, so you can focus on getting the bot working first.
+
+### Selecting the AI model for OpenClaw
+
+Once the quick start process is complete, Openclaw sets up a local gateway and will show you a prompt to set up the model for it.
+
+Here we will use the Google model/auth provider. Once, you press enter it will give you three options where you have to select the **Google Antigravity OAuth** option.
+
+It will then ask you to log into your Gmail account, and once you give it the permission, it will notify you with authentication completed message.
+
+Once the authentication is completed, you’ll notice the bot terminal will give you different model options to choose from depending on your Gemini subscription. We’re using the `gemini-3-flash` model, but you can use any model of your choice.
+
+Note: These setup steps won’t change much even if you switch to a different model provider, such as OpenAI, Claude, or any of the other supported options. We suggest using Claude Code here if you have a max subscription.
+
+### Connecting OpenClaw to Telegram
+
+Now that our bot has the access to the model, it will ask us to setup the chat interface.
+
+To chat with our bot, we’ll use [Telegram](https://desktop.telegram.org/). Select the Telegram option and follow the following steps:
+
+1. Open Telegram
+2. Search for `@BotFather` and start the chat
+3. Run `/newbot`
+4. Copy the bot token
+
+```
+/newbot
+```
+
+Move back to the terminal where Openclaw is prompting you to paste the token.
+
+That’s all, we are done with our telegram setup.
+
+Note: This tutorial uses Telegram for Openclaw chat access, but Openclaw also supports WhatsApp, Discord, iMessage, and other messaging platforms. The setup process is similar regardless of which platform you choose—you’ll authenticate during the onboarding wizard just like we did with Telegram.
+
+### Setting up the skills for OpenClaw
+
+After the Telegram setup is complete, the bot will ask you to set up [skills](https://docs.molt.bot/tools/skills), which will become a folder of tools your bot can use to perform specific tasks. Like mailing someone on your behalf. So, when it asks you to configure skills, press “Yes” and for the preferred node manager option, use “npm”.
+
+We won’t set up any skills for now, so press the spacebar on the “Skip for now” option and press enter.
+
+### Configuring API Keys for OpenClaw
+
+In the next step, Openclaw will ask you to provide it with different API keys if you have them. In our case, we had no APIs to provide, so we selected “No” for each of them.
+
+And after this, it will ask you about hooks, which we’ll skip for now.
+
+## How to run and test OpenClaw
+
+Openclaw provides two ways to interact with your AI assistant:
+
+- Control UI
+- TUI
+
+**Control UI (Browser-Based Interface)**
+
+The Control UI is a web-based dashboard that opens in your browser. To access it, paste the Web UI link shown in your terminal into any browser.
+
+**TUI (Terminal User Interface)**
+
+The Terminal UI keeps everything in your command line. This is the recommended option for first-time setup because it provides direct, immediate feedback as your Openclaw completes its personality configuration. The TUI shows the same conversation flow you’ll see in Telegram later, making it easier to understand how Openclaw responds.
+
+And, now that you understand the difference between the TUI and Control UI, the moment we’ve all been waiting for is here! It’s time to hatch our bot. Select the “Hatch in TUI” option and press “Enter”. It will then ask you some simple questions, like the bot’s name and what it can call you, which you can fill in the answer bar.
+
+After answering these questions, your Openclaw will confirm its setup with a personalized response that reflects the personality you’ve configured.
+
+Your Openclaw assistant now has a unique identity, understands who you are, and is ready to receive commands through both the terminal and your connected messaging platform.
+
+### Chatting with OpenClaw through Telegram
+
+Our bot is now operational, and we want to communicate with it from anywhere, which is why we need Telegram. You can’t access the terminal from your phone, can you? So far, our work is almost done. We now need to give our bot a bit more information to connect it with the Telegram bot we created earlier. Go to your Telegram bot and run the command “/start”.
+
+It will provide you with the configuration details you need to copy and ask your bot to connect to the Telegram bot.
+
+Once the Telegram bot setup is complete, we can start using Telegram instead of the terminal to interact with our bot. Start by asking a friendly question.
+
+With this, we can interact with our bot through Telegram 24/7, giving us the ability to control our system from our phones as well.
+
+## How to let OpenClaw perform web searches
+
+Right now, our bot can perform some simple tasks, but when it comes to complex tasks involving web searches, it will fail. So, why not ask it how we can let it perform web searches for us?
+
+Using Telegram, ask your bot how it can do web searches.
+
+Let’s follow the steps it has provided us with:
+
+1. Go to the Brave Web Search API console and open the API tab.
+2. Copy the API key and send it to your bot through Telegram chat.
+
+With this, our bot can now search the web as well, giving it more capabilities to perform the tasks we provide. Let’s test it out by asking a question.
+
+We can see how the bot searched the web for us to gather the latest news as we requested. Now, let’s give it a slightly more complicated task where the bot also needs to create some files in our system.
+
+### How OpenClaw interacts with the system
+
+Now that Openclaw can search the web, let’s test its file creation abilities. We’ll ask Openclaw to research a topic, then save that research into a [markdown](https://www.codecademy.com/resources/docs/markdown) file.
+
+Let’s open the file and see how well it has documented the article for us.
+
+We can see that it’s done a solid job of documenting the information gathered from the articles it collected for us. It also includes the sources at the end of the file, which makes the output easy to verify. This confirms that our bot can read from and modify files on our system, opening up an entirely new set of possibilities for automating and simplifying everyday tasks we deal with.
+
+## Security risks and safety precautions
+
+Openclaw is powerful because it runs on your system and can take real actions like creating files, fetching data from the web, and responding to instructions through chat. That same power can become a security risk if you’re not careful about how and where you run it.
+
+This isn’t a flaw in Openclaw itself, it’s a natural consequence of giving any AI agent direct system access. Understanding these risks helps you use Openclaw safely while still benefiting from its automation capabilities.
+
+### Why running Openclaw locally requires caution
+
+When you run Openclaw on your own computer or a virtual server, you’re effectively allowing a chat interface to trigger actions on that system. It’s very concerning if your bot:
+
+- has access to sensitive directories.
+- runs with elevated privileges.
+- is connected to a publicly accessible chat.
+- or receives poorly scoped instructions.
+
+It can unintentionally modify files, overwrite data, or expose information you didn’t intend to share.
+
+The risk isn’t that Openclaw is “malicious”, the risk is that it will do exactly what it’s told, even when the instruction is vague or unsafe.
+
+### Local machine vs virtual server risks
+
+When running Openclaw on a personal computer, vague instructions or misconfigured permissions can lead to:
+
+- overwriting important files
+- leaking API keys or configuration files
+- modifying project directories unintentionally
+
+On a virtual server (VPS), the impact can be much worse:
+
+- it can corrupt services
+- accidental exposure of server data
+- unintended access to production resources
+- security issues that affect other applications on the same server
+
+This is why treating Openclaw like a harmless [chatbot](https://www.codecademy.com/article/what-are-chatbots) is a mistake. It’s closer to a programmable assistant with system access.
+
+### How to use OpenClaw safely
+
+To reduce risk, here are some safety measures that you can apply while use Openclaw:
+
+- Run Openclaw as a non-privileged user
+- Keep its working files in a dedicated directory
+- Avoid connecting it to public or shared chats initially
+- Be explicit when asking it to read or write files
+- Test new capabilities on a disposable system or VM
+
+Think of Openclaw the same way you’d think about running scripts on your system, which is powerful and useful, but you must be careful with it.
+
+Note: If you wouldn’t trust a shell command with the same permissions, don’t trust your bot with them either. Openclaw is at its best when you start small, observe its behavior, and expand its responsibilities deliberately.
