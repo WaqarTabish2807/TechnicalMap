@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"pnpm build:content --watch\"",
-    "dev:remote": "concurrently \"next-remote-watch ./_dist-content/**/*\" \"pnpm build:content --watch\"",
-    "build": "pnpm build:content && next build",
+    "dev": "concurrently \"next dev\" \"npm run build:content -- --watch\"",
+    "dev:remote": "concurrently \"next-remote-watch ./_dist-content/**/*\" \"npm run build:content -- --watch\"",
+    "build": "npm run build:content && next build",
     "build:content": "rm -rf ./_dist-content && babel ./content --out-dir ./_dist-content --copy-files --extensions .ts,.tsx",
     "start": "next start",
     "lint": "next lint",

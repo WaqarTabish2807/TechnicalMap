@@ -1,6 +1,6 @@
 "use client";
 
-import { MDX } from "../components/mdx";
+
 import {
   Cursors,
   CursorOverview,

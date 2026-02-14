@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { serialize } from "next-mdx-remote/serialize";
+
 import { readPage } from "../lib/fs";
 import { LinesContent } from "./content";
 
