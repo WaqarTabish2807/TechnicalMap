@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import type { GetStaticPropsContext } from "next";
 import NextLink from "next/link";
 import Head from "next/head";
@@ -47,6 +47,29 @@ export default function PostPage({ content }: { content: Post }) {
         [content.code]
     );
     const { frontmatter, headings, slug } = content;
+
+    useEffect(() => {
+        const lastHeights = new WeakMap<HTMLIFrameElement, number>();
+        function handleIframeMessage(event: MessageEvent) {
+            if (event.data && event.data.type === 'iframeHeight') {
+                const newH: number = event.data.height;
+                const iframes = document.querySelectorAll<HTMLIFrameElement>('iframe[src]');
+                iframes.forEach((iframe) => {
+                    try {
+                        if (iframe.contentWindow === event.source) {
+                            const prev = lastHeights.get(iframe) ?? 0;
+                            if (Math.abs(newH - prev) > 2) { // only update if meaningfully different
+                                lastHeights.set(iframe, newH);
+                                iframe.style.height = `${newH}px`;
+                            }
+                        }
+                    } catch {}
+                });
+            }
+        }
+        window.addEventListener('message', handleIframeMessage);
+        return () => window.removeEventListener('message', handleIframeMessage);
+    }, []);
     return (
         <PageWrapper>
             <Head>

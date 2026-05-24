@@ -72,6 +72,65 @@ export const Content = styled("div", {
     },
   },
 
+  img: {
+    maxWidth: "100%",
+    height: "auto",
+    borderRadius: "$base",
+    border: "1px solid $gray8",
+    display: "block",
+    margin: "$8 auto",
+    boxShadow: "$sm",
+
+    [`.${darkTheme} &`]: {
+      border: "1px solid $gray4",
+    },
+  },
+
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: "$6",
+    marginBottom: "$8",
+    fontSize: "$sm",
+    lineHeight: "1.5",
+    border: "1px solid $gray6",
+    borderRadius: "$base",
+    overflow: "hidden",
+
+    [`.${darkTheme} &`]: {
+      border: "1px solid $gray4",
+    },
+
+    "th, td": {
+      padding: "$3 $4",
+      textAlign: "left",
+      borderBottom: "1px solid $gray6",
+      verticalAlign: "top",
+
+      [`.${darkTheme} &`]: {
+        borderBottom: "1px solid $gray4",
+      },
+    },
+
+    th: {
+      fontWeight: "600",
+      background: "$gray4",
+      color: "$gray12",
+
+      [`.${darkTheme} &`]: {
+        background: "$gray2",
+      },
+    },
+
+    "tr:nth-child(even)": {
+      background: "$gray3",
+
+      [`.${darkTheme} &`]: {
+        background: "rgba(255, 255, 255, 0.02)",
+      },
+    },
+  },
+
   blockquote: {
     paddingLeft: "$4",
     borderLeft: "2px solid $gray8",

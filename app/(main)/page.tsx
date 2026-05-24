@@ -123,7 +123,7 @@ export default function HomePage() {
               Interactive Posts On How to Write A Technical Blog by{" "}
               <a
                 className="underline underline-offset-2"
-                href="https://x.com/iamwaqs"
+                href="https://www.linkedin.com/in/md-waqar-tabish/"
               >
                 Waqar Tabish.
               </a>

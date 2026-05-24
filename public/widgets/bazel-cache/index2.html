@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Namespace Cache Volume Architecture & Sizing</title>
+  <!-- Modern Geist and Geist Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* DESIGN SYSTEM DESIGNED FOR SAAS & BLOG FIDELITY */
+    :root {
+      --bg-main: #0B0D10;
+      --bg-card: #12151B;
+      --bg-card-hover: #171B23;
+      --border-color: #212631;
+      --border-color-active: #384252;
+      
+      --text-primary: #F3F4F6;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+      
+      --color-hit: #10B981;
+      --color-hit-bg: rgba(16, 185, 129, 0.08);
+      --color-hit-border: rgba(16, 185, 129, 0.2);
+      
+      --color-miss: #F43F5E;
+      --color-miss-bg: rgba(244, 63, 94, 0.08);
+      --color-miss-border: rgba(244, 63, 94, 0.2);
+      
+      --color-latency: #F59E0B;
+      --color-latency-bg: rgba(245, 158, 11, 0.08);
+      
+      --color-purple: #8B5CF6;
+      --color-purple-bg: rgba(139, 92, 246, 0.08);
+      --color-purple-border: rgba(139, 92, 246, 0.2);
+      
+      --color-blue: #3B82F6;
+      --color-blue-bg: rgba(59, 130, 246, 0.08);
+      --color-blue-border: rgba(59, 130, 246, 0.2);
+      
+      --transition-speed: 0.25s;
+      --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'Geist Mono', SFMono-Regular, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #050608;
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* AUTHOR TOOLBAR STYLE - MINIMALIST EDIT ONLY */
+    .author-toolbar {
+      width: 100%;
+      max-width: 900px;
+      background: rgba(18, 21, 27, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+    }
+
+    .toggle-switch-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 22px;
+      background-color: #2D3748;
+      border-radius: 11px;
+      transition: background-color var(--transition-speed);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: #FFF;
+      top: 2px;
+      left: 2px;
+      transition: transform var(--transition-speed);
+    }
+
+    input#editModeToggle {
+      display: none;
+    }
+
+    input#editModeToggle:checked + .toggle-switch {
+      background-color: var(--color-blue);
+    }
+
+    input#editModeToggle:checked + .toggle-switch::after {
+      transform: translateX(22px);
+    }
+
+    /* MAIN CONTAINER */
+    .caching-widget-container {
+      width: 100%;
+      max-width: 900px;
+      background-color: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      position: relative;
+      transition: border-color var(--transition-speed);
+    }
+
+    /* EDIT MODE ACTIVE OUTLINES */
+    .caching-widget-container.edit-mode-active {
+      border-color: var(--color-blue);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+    }
+
+    .edit-mode-active .editable {
+      outline: 1px dashed rgba(59, 130, 246, 0.5) !important;
+      outline-offset: 3px;
+      cursor: text;
+    }
+
+    .edit-mode-active .editable:hover {
+      background: rgba(59, 130, 246, 0.05);
+      outline-color: var(--color-blue) !important;
+    }
+
+    .edit-mode-active .editable:focus {
+      outline: 2px solid var(--color-blue) !important;
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    /* TAB NAVIGATION */
+    .widget-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px 12px;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      transition: all var(--transition-speed);
+      min-height: 72px;
+    }
+
+    .tab-btn:hover {
+      background-color: var(--bg-card-hover);
+      border-color: var(--border-color-active);
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background-color: var(--bg-card);
+      border-color: var(--color-blue);
+      color: var(--text-primary);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+
+    /* TAB CONTENT CARDS */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out forwards;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* HEADERS */
+    .section-meta {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .section-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* TIER ARCHITECTURE VISUALIZATION */
+    .tier-container {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .tier-box {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-card);
+    }
+
+    .tier-header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tier-header.hot {
+      background: rgba(16, 185, 129, 0.04);
+      color: var(--color-hit);
+    }
+
+    .tier-header.cold {
+      background: rgba(139, 92, 246, 0.04);
+      color: var(--color-purple);
+    }
+
+    .tier-header span {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+
+    .tier-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .sub-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sub-card-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .hot .sub-card-title { color: var(--color-hit); }
+    .cold .sub-card-title { color: var(--color-purple); }
+
+    .sub-card-desc {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* SEQUENCE FLOW LIST */
+    .sequence-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+      margin-top: 20px;
+    }
+
+    .sequence-step {
+      display: flex;
+      gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all var(--transition-speed);
+    }
+
+    .sequence-step:hover {
+      border-color: var(--border-color-active);
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1F2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+
+    .step-hit .step-number {
+      background-color: var(--color-hit-bg);
+      border-color: var(--color-hit);
+      color: var(--color-hit);
+    }
+
+    .step-miss .step-number {
+      background-color: var(--color-miss-bg);
+      border-color: var(--color-miss);
+      color: var(--color-miss);
+    }
+
+    .step-details {
+      flex-grow: 1;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .step-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background-color: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: lowercase;
+    }
+
+    .badge-hit {
+      background: var(--color-hit-bg);
+      color: var(--color-hit);
+      border: 1px solid var(--color-hit-border);
+    }
+
+    .badge-miss {
+      background: var(--color-miss-bg);
+      color: var(--color-miss);
+      border: 1px solid var(--color-miss-border);
+    }
+
+    .step-body {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* NET RESULT & 보안 NOTE BOXES */
+    .net-result-box {
+      border-left: 3px solid var(--color-hit);
+      background: rgba(16, 185, 129, 0.02);
+      padding: 20px;
+      border-radius: 0 12px 12px 0;
+      margin-bottom: 24px;
+    }
+
+    .net-result-box.security {
+      border-left-color: var(--color-latency);
+      background: rgba(245, 158, 11, 0.02);
+    }
+
+    .net-result-box.security strong {
+      color: var(--color-latency);
+    }
+
+    .net-result-box p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .net-result-box strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .net-result-box a {
+      color: var(--color-blue);
+      text-decoration: none;
+    }
+
+    .net-result-box a:hover {
+      text-decoration: underline;
+    }
+
+    /* TAB 2: FORK MODEL LIFECYCLE FLOW */
+    .fork-model-diagram {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .fork-row {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .fork-run-label {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .fork-sequence {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pill-empty {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .pill-committed {
+      border: 1px solid var(--color-hit);
+      background: var(--color-hit-bg);
+      color: var(--color-hit);
+    }
+
+    .pill-private {
+      border: 1px solid var(--color-purple);
+      background: var(--color-purple-bg);
+      color: var(--color-purple);
+    }
+
+    .pill-discarded {
+      border: 1px dashed var(--text-muted);
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .pill-failed {
+      background: var(--color-miss-bg);
+      border: 1px solid var(--color-miss);
+      color: var(--color-miss);
+    }
+
+    .fork-arrow {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    /* PROPERTIES GRID */
+    .properties-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .property-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .property-card.success-border {
+      border-color: var(--color-hit-border);
+    }
+
+    .property-card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .success-border .property-card-title {
+      color: var(--color-hit);
+    }
+
+    .property-card-desc {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* TAB 3: LOCAL TO CI SHARING GRAPH */
+    .sharing-diagram {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .sharing-node-center {
+      background: var(--color-hit-bg);
+      border: 1.5px solid var(--color-hit);
+      padding: 16px 24px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+      margin-bottom: 40px;
+      z-index: 2;
+    }
+
+    .sharing-node-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--color-hit);
+    }
+
+    .sharing-node-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .sharing-branches-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      gap: 40px;
+      position: relative;
+    }
+
+    .sharing-branches-container::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      width: 1px;
+      height: 40px;
+      background: var(--color-hit);
+      transform: translateX(-0.5px);
+      z-index: 1;
+    }
+
+    .sharing-branches-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 25%;
+      right: 25%;
+      height: 1px;
+      background: var(--border-color);
+      z-index: 1;
+    }
+
+    .branch-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .branch-side::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 1px;
+      height: 16px;
+      background: var(--border-color);
+      transform: translateX(-0.5px);
+    }
+
+    .branch-button {
+      margin-top: 16px;
+      background: #1F2937;
+      border: 1px solid var(--border-color);
+      padding: 10px 18px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+    }
+
+    .branch-button svg {
+      color: var(--text-secondary);
+    }
+
+    .branch-code {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* TAB 4: CALCULATOR DESIGNS */
+    .calculator-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .calc-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .calc-label {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* CUSTOM CODEBASE SELECT DROPDOWN */
+    .custom-select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .custom-select-trigger {
+      width: 100%;
+      background: #191E27;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all var(--transition-speed);
+    }
+
+    .custom-select-trigger:hover {
+      border-color: var(--border-color-active);
+      background: #1D232E;
+    }
+
+    .custom-select-trigger::after {
+      content: '';
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--text-secondary);
+      transition: transform var(--transition-speed);
+    }
+
+    .custom-select-wrapper.open .custom-select-trigger::after {
+      transform: rotate(180deg);
+    }
+
+    .custom-select-options {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: #1C222C;
+      border: 1px solid var(--border-color-active);
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .custom-select-wrapper.open .custom-select-options {
+      display: flex;
+    }
+
+    .custom-select-option {
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all var(--transition-speed);
+    }
+
+    .custom-select-option:hover {
+      background: #252D3B;
+      color: var(--text-primary);
+    }
+
+    .custom-select-option.selected {
+      color: var(--text-primary);
+      font-weight: 600;
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .custom-select-option .check-icon {
+      width: 14px;
+      height: 14px;
+      display: none;
+      color: var(--color-blue);
+    }
+
+    .custom-select-option.selected .check-icon {
+      display: block;
+    }
+
+    /* SLIDERS */
+    .range-slider-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .range-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      flex-grow: 1;
+      height: 4px;
+      background: #1F2937;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      transition: background var(--transition-speed);
+    }
+
+    .range-slider::-webkit-slider-thumb:hover {
+      background: var(--text-primary);
+    }
+
+    .range-value {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      width: 50px;
+      text-align: right;
+    }
+
+    /* CALCULATOR ESTIMATES */
+    .calculator-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-top: 16px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .estimates-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .estimate-box {
+      background: #141820;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .estimate-box.green-theme {
+      background: var(--color-hit-bg);
+      border-color: var(--color-hit-border);
+    }
+
+    .estimate-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .green-theme .estimate-label {
+      color: var(--color-hit);
+    }
+
+    .estimate-value {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .green-theme .estimate-value {
+      color: var(--color-hit);
+    }
+
+    .estimate-details {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* PROGRESS BAR */
+    .progress-section {
+      margin-bottom: 24px;
+    }
+
+    .progress-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-wrapper {
+      background: #181D26;
+      border: 1px solid var(--border-color);
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      width: 100%;
+    }
+
+    .progress-bar-fill {
+      background-color: var(--color-hit);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #000;
+      white-space: nowrap;
+      transition: width 0.3s cubic-bezier(0.1, 0.8, 0.2, 1);
+    }
+
+    .progress-bar-unfilled {
+      height: 100%;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      background: transparent;
+      white-space: nowrap;
+    }
+
+    .progress-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    /* SIZE COMPARISON FLOW */
+    .sizing-flow-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sizing-flow-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sizing-flow-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .sizing-flow-items {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .badge-filled {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: #FFF;
+    }
+
+    .badge-filled.red {
+      background: var(--color-miss);
+    }
+
+    .badge-filled.green {
+      background: var(--color-hit);
+    }
+
+    .badge-filled.gray {
+      background: #374151;
+      color: var(--text-secondary);
+    }
+
+    /* RESPONSIVE STYLES */
+    @media (max-width: 768px) {
+      .widget-tabs {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .tab-btn {
+        min-height: auto;
+        padding: 12px;
+      }
+
+      .tier-cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .properties-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sharing-branches-container {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .sharing-branches-container::before,
+      .sharing-branches-container::after,
+      .branch-side::before {
+        display: none;
+      }
+
+      .calc-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .estimates-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sizing-flow-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .fork-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  
+    </label>
+  </div>
+
+  <!-- THE INTERACTIVE WIDGET -->
+  <div class="caching-widget-container" id="cachingWidget">
+    
+    <!-- Tab Controls -->
+    <div class="widget-tabs">
+      <button class="tab-btn active" data-tab="tab-architecture">
+        Tiered cache architecture
+      </button>
+      <button class="tab-btn" data-tab="tab-lifecycle">
+        Cache volume lifecycle
+      </button>
+      <button class="tab-btn" data-tab="tab-sharing">
+        Local-to-CI cache sharing
+      </button>
+      <button class="tab-btn" data-tab="tab-calculator">
+        Volume sizing calculator
+      </button>
+    </div>
+
+    <!-- TAB 1: TIERED CACHE ARCHITECTURE -->
+    <div class="tab-content active" id="tab-architecture">
+      <div class="section-meta editable">HOW A BAZEL AC LOOKUP FLOWS THROUGH NAMESPACE'S TWO TIERS</div>
+      
+      <div class="tier-container">
+        <!-- Hot Tier Box -->
+        <div class="tier-box hot">
+          <div class="tier-header hot">
+            <span class="editable">⚡ Hot tier — NVMe co-located with runner</span>
+            <span class="editable">&lt; 1ms</span>
+          </div>
+          <div class="tier-cards-grid">
+            <div class="sub-card">
+              <span class="sub-card-title editable">Action cache (AC)</span>
+              <span class="sub-card-desc editable">Action key &rarr; output digest map. Checked first on every lookup.</span>
+            </div>
+            <div class="sub-card">
+              <span class="sub-card-title editable">Content addressable storage</span>
+              <span class="sub-card-desc editable">Blob bytes keyed by digest. Read at NVMe speed when warm.</span>
+            </div>
+            <div class="sub-card">
+              <span class="sub-card-title editable">Cache Volume mount</span>
+              <span class="sub-card-desc editable">Persists across job teardown. Survives runner restart.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cold Tier Box -->
+        <div class="tier-box cold">
+          <div class="tier-header cold">
+            <span class="editable">📦 Cold tier — Namespace artifact storage</span>
+            <span class="editable">globally distributed</span>
+          </div>
+          <div class="tier-cards-grid">
+            <div class="sub-card">
+              <span class="sub-card-title editable">Infrequently accessed blobs</span>
+              <span class="sub-card-desc editable">Artifacts evicted from hot tier or not yet promoted.</span>
+            </div>
+            <div class="sub-card">
+              <span class="sub-card-title editable">Cross-workspace history</span>
+              <span class="sub-card-desc editable">Build outputs shared across branches and PRs.</span>
+            </div>
+            <div class="sub-card">
+              <span class="sub-card-title editable">Transparent promotion</span>
+              <span class="sub-card-desc editable">Frequently read blobs move to hot tier automatically.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-meta editable">PER-ACTION REQUEST FLOW — WARM CACHE</div>
+      
+      <div class="sequence-flow">
+        <!-- Step 1 -->
+        <div class="sequence-step">
+          <div class="step-number">1</div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Bazel computes action key</span>
+            </div>
+            <div class="step-body editable">
+              Hash of input digests + command + whitelisted env vars. Stable if the build is hermetic.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="sequence-step step-hit">
+          <div class="step-number">2</div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Hot tier AC lookup</span>
+              <span class="badge badge-hit editable">hit — &lt;1ms</span>
+            </div>
+            <div class="step-body editable">
+              NVMe-backed Cache Volume returns the action result immediately. Steps 3 and 4 are skipped entirely for this action.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="sequence-step step-miss">
+          <div class="step-number">3</div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Cold tier AC lookup</span>
+              <span class="badge badge-miss editable">only on miss</span>
+            </div>
+            <div class="step-body editable">
+              Consulted only when the hot tier has no entry — first run after volume creation, or for actions that haven't run since the last cold start.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="sequence-step step-hit">
+          <div class="step-number">4</div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Blob read from hot tier CAS</span>
+              <span class="badge badge-hit editable">&lt;1ms per file</span>
+            </div>
+            <div class="step-body editable">
+              Artifact bytes read from local NVMe. No network fetch. For a 10MB <code>.rlib</code>, this is ~0.1ms vs ~100ms over GCS.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="net-result-box">
+        <p class="editable"><strong>On a warm cache,</strong> steps 2 and 4 handle 80–95% of actions entirely on local NVMe. The cold tier and remote network are only consulted for the delta: actions that genuinely changed since the last committed cache state.</p>
+      </div>
+    </div>
+
+    <!-- TAB 2: CACHE VOLUME LIFECYCLE -->
+    <div class="tab-content" id="tab-lifecycle">
+      <div class="section-meta editable">CACHE VOLUME FORK MODEL — WHAT HAPPENS ACROSS RUNS</div>
+      
+      <div class="fork-model-diagram">
+        <!-- Row 1 -->
+        <div class="fork-row">
+          <span class="fork-run-label editable">Run 1 (cold)</span>
+          <div class="fork-sequence">
+            <span class="pill pill-empty editable">empty volume</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="editable">build</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="pill pill-committed editable">committed v1</span>
+          </div>
+        </div>
+        <!-- Row 2 -->
+        <div class="fork-row">
+          <span class="fork-run-label editable">Run 2 (warm)</span>
+          <div class="fork-sequence">
+            <span class="pill pill-committed editable">committed v1</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="editable">fork</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="pill pill-private editable">private copy</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="editable">exit 0</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="pill pill-committed editable">committed v2</span>
+          </div>
+        </div>
+        <!-- Row 3 -->
+        <div class="fork-row">
+          <span class="fork-run-label editable">PR A + PR B</span>
+          <div class="fork-sequence" style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="pill pill-committed editable">committed v2</span>
+              <span class="fork-arrow">&rarr;</span>
+              <span class="editable">fork</span>
+              <span class="fork-arrow">&rarr;</span>
+              <span class="pill pill-private editable">PR A copy</span>
+              <span class="fork-arrow">&rarr;</span>
+              <span class="editable">exit 0</span>
+              <span class="fork-arrow">&rarr;</span>
+              <span class="pill pill-committed editable">committed v3</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="pill pill-committed editable">committed v2</span>
+              <span class="fork-arrow">&rarr;</span>
+              <span class="editable">fork</span>
+              <span class="fork-arrow">&rarr;</span>
+              <span class="pill pill-private editable">PR B copy</span>
+              <span class="fork-arrow">&rarr;</span>
+              <span class="editable">exit 0</span>
+              <span class="fork-arrow">&rarr;</span>
+              <span class="pill pill-discarded editable">discarded (last-write-wins)</span>
+            </div>
+          </div>
+        </div>
+        <!-- Row 4 -->
+        <div class="fork-row">
+          <span class="fork-run-label editable">Failed job</span>
+          <div class="fork-sequence">
+            <span class="pill pill-committed editable">committed v3</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="editable">fork</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="pill pill-private editable">private copy</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="editable">exit 1</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="pill pill-failed editable">writes discarded</span>
+            <span class="fork-arrow">&rarr;</span>
+            <span class="pill pill-committed editable">committed v3</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-meta editable">KEY PROPERTIES OF THE FORK MODEL</div>
+      
+      <div class="properties-grid">
+        <div class="property-card success-border">
+          <div class="property-card-title editable">No concurrent corruption</div>
+          <div class="property-card-desc editable">Parallel PRs each get isolated forks. Writes never collide mid-run.</div>
+        </div>
+        <div class="property-card success-border">
+          <div class="property-card-title editable">Failure safety</div>
+          <div class="property-card-desc editable">Exit non-zero = changes discarded. Partial builds never corrupt the committed state.</div>
+        </div>
+        <div class="property-card">
+          <div class="property-card-title editable">Last-write-wins</div>
+          <div class="property-card-desc editable">When two jobs both succeed, the later commit wins. Safe because Bazel outputs are deterministic: same inputs always produce identical outputs.</div>
+        </div>
+        <div class="property-card">
+          <div class="property-card-title editable">First run is always cold</div>
+          <div class="property-card-desc editable">No committed state exists yet. All actions fall through to the remote cache. Run 2 onwards is where the volume pays off.</div>
+        </div>
+      </div>
+
+      <div class="net-result-box" style="border-left-color: var(--color-blue); background: rgba(59, 130, 246, 0.02)">
+        <p class="editable">The fork model mirrors how Git handles branches &mdash; each job gets its own working copy of the last stable state, and merges back only on clean completion. The difference is that Bazel's content-addressed outputs are deterministic, so merge conflicts are structurally impossible.</p>
+      </div>
+    </div>
+
+    <!-- TAB 3: LOCAL-TO-CI CACHE SHARING -->
+    <div class="tab-content" id="tab-sharing">
+      <div class="section-meta editable">SAME CACHE BACKEND, TWO ENTRY POINTS</div>
+      
+      <div class="sharing-diagram">
+        <div class="sharing-node-center">
+          <div class="sharing-node-title editable">Namespace workspace cache</div>
+          <div class="sharing-node-subtitle editable">Hot NVMe tier + cold artifact storage</div>
+        </div>
+        
+        <div class="sharing-branches-container">
+          <!-- Local dev -->
+          <div class="branch-side">
+            <div class="branch-button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              <span class="editable">Local dev</span>
+            </div>
+            <span class="branch-code editable">nsc cache bazel setup</span>
+          </div>
+          <!-- CI runner -->
+          <div class="branch-side">
+            <div class="branch-button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              <span class="editable">CI runner</span>
+            </div>
+            <span class="branch-code editable">auto-configured by profile</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-meta editable">WHAT LOCAL-TO-CI SHARING MEANS IN PRACTICE</div>
+      
+      <div class="sequence-flow">
+        <!-- Step 1 -->
+        <div class="sequence-step">
+          <div class="step-number">1</div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">CI builds main branch, populates cache</span>
+            </div>
+            <div class="step-body editable">
+              Every action result and blob written by CI is committed to the shared workspace cache. Short-lived credentials scope access to the workspace, not to a specific machine.
+            </div>
+          </div>
+        </div>
+        <!-- Step 2 -->
+        <div class="sequence-step">
+          <div class="step-number">2</div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Developer pulls branch, runs <code>nsc cache bazel setup</code></span>
+            </div>
+            <div class="step-body editable">
+              The CLI writes a <code>bazelrc</code> pointing at the same Namespace cache endpoint CI used. Short-lived token is generated and expires after a few hours. No long-lived service account key needed.
+            </div>
+          </div>
+        </div>
+        <!-- Step 3 -->
+        <div class="sequence-step">
+          <div class="step-number">3</div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Developer runs <code>bazel build //...</code></span>
+            </div>
+            <div class="step-body editable">
+              Bazel queries the Namespace cache. Everything CI already built on the latest commit is a hit. No cold compile. The developer gets CI's cache for free.
+            </div>
+          </div>
+        </div>
+        <!-- Step 4 -->
+        <div class="sequence-step">
+          <div class="step-number">4</div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Developer builds a new target locally</span>
+            </div>
+            <div class="step-body editable">
+              With <code>--remote_upload_local_results=true</code> in <code>.bazelrc</code>, the local build writes results back to the shared cache. CI and other developers can now hit those entries too.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="properties-grid">
+        <div class="property-card success-border">
+          <div class="property-card-title editable">No cold builds for developers</div>
+          <div class="property-card-desc editable">Pull a branch that CI already built. First local <code>bazel build</code> hits the cache.</div>
+        </div>
+        <div class="property-card" style="border-color: rgba(245, 158, 11, 0.2)">
+          <div class="property-card-title editable" style="color: var(--color-latency);">Credential model</div>
+          <div class="property-card-desc editable">Short-lived tokens only. No GCS service account keys to rotate or leak.</div>
+        </div>
+      </div>
+
+      <div class="net-result-box security">
+        <p class="editable"><strong>Security note:</strong> Only enable <code>--remote_upload_local_results=true</code> for CI runs against merged code. For PR CI (untrusted code), use <code>--noremote_upload_local_results</code> to prevent unreviewed code from writing to the shared cache. See <a href="https://jmerle.github.io/bazel-cache-poisoning/" target="_blank">Julio Merino's cache poisoning writeup</a> for the attack vector.</p>
+      </div>
+    </div>
+
+    <!-- TAB 4: CALCULATOR -->
+    <div class="tab-content" id="tab-calculator">
+      <div class="section-meta editable">CACHE VOLUME SIZE CALCULATOR</div>
+      <h3 class="section-desc editable">When committed cache content exceeds the configured volume size, the next run receives an empty volume: a silent cold start with no warning in CI logs. Size correctly from the start.</h3>
+
+      <div class="calculator-card">
+        <!-- Row 1: Codebase Selection -->
+        <div class="calc-row">
+          <div class="calc-label editable">Codebase type</div>
+          <div class="custom-select-wrapper" id="codebaseSelect">
+            <div class="custom-select-trigger" id="selectTriggerText">Rust monorepo</div>
+            <div class="custom-select-options">
+              <div class="custom-select-option" data-value="go">
+                <span>Go monorepo</span>
+                <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="custom-select-option" data-value="jvm">
+                <span>JVM (Java / Kotlin / Scala)</span>
+                <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="custom-select-option" data-value="python">
+                <span>Python</span>
+                <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="custom-select-option selected" data-value="rust">
+                <span>Rust monorepo</span>
+                <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="custom-select-option" data-value="cpp">
+                <span>C++ monorepo</span>
+                <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="custom-select-option" data-value="mixed">
+                <span>Mixed (Go + Rust)</span>
+                <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Target Count Slider -->
+        <div class="calc-row">
+          <div class="calc-label editable">Target count</div>
+          <div class="range-slider-container">
+            <input type="range" class="range-slider" id="targetSlider" min="500" max="20000" step="100" value="5500">
+            <span class="range-value" id="targetValue">5,500</span>
+          </div>
+        </div>
+
+        <!-- Row 3: Active Engineers Slider -->
+        <div class="calc-row">
+          <div class="calc-label editable">Active engineers</div>
+          <div class="range-slider-container">
+            <input type="range" class="range-slider" id="engineerSlider" min="1" max="100" step="1" value="10">
+            <span class="range-value" id="engineerValue">10</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="calculator-subtitle editable">VOLUME SIZE ESTIMATE</div>
+
+      <div class="estimates-grid">
+        <div class="estimate-box">
+          <span class="estimate-label editable">Estimated output footprint</span>
+          <span class="estimate-value" id="footprintVal">158 GB</span>
+          <span class="estimate-details" id="footprintDetails">158 GB for 5,500 Rust targets + 10 engineers writing local results</span>
+        </div>
+        <div class="estimate-box green-theme">
+          <span class="estimate-label editable">Recommended volume size</span>
+          <span class="estimate-value" id="recommendVal">221 GB</span>
+          <span class="estimate-details" id="recommendDetails">221 GB (1.4x buffer to avoid silent eviction)</span>
+        </div>
+      </div>
+
+      <!-- PROGRESS Headroom Bar -->
+      <div class="progress-section">
+        <div class="progress-meta-row">
+          <span>0 GB</span>
+          <span>cache usage at peak</span>
+          <span id="progressMaxVal">221 GB configured</span>
+        </div>
+        <div class="progress-bar-wrapper">
+          <div class="progress-bar-fill" id="progressBarFill" style="width: 71%;">158 GB used</div>
+          <div class="progress-bar-unfilled" id="progressBarUnfilled">63 GB free</div>
+        </div>
+        <p class="progress-note" id="codebaseSpecificNote">rlib files and debug symbols are large. Active monorepos exceed 50GB in days.</p>
+      </div>
+
+      <div class="section-meta editable">SIZE OVER TIME — WHAT HAPPENS WITHOUT CORRECT SIZING</div>
+      
+      <div class="sizing-flow-card">
+        <div class="sizing-flow-row">
+          <span class="sizing-flow-label editable">Under-sized</span>
+          <div class="sizing-flow-items">
+            <span class="badge-filled gray" id="undersizedPill" style="border: 1px solid rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.05); color: var(--color-miss);">133 GB vol.</span>
+            <span class="editable">fills in ~6w &rarr;</span>
+            <span class="badge-filled red editable">exceeds limit</span>
+            <span class="editable">&rarr;</span>
+            <span class="badge-filled gray editable">cold start</span>
+          </div>
+        </div>
+        <div class="sizing-flow-row">
+          <span class="sizing-flow-label editable">Correct size</span>
+          <div class="sizing-flow-items">
+            <span class="badge-filled gray" id="correctsizedPill" style="border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); color: var(--color-hit);">221 GB vol.</span>
+            <span class="editable">stable for months &rarr;</span>
+            <span class="badge-filled green editable">always warm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="net-result-box" style="border-left-color: var(--color-hit); background: rgba(16, 185, 129, 0.02)">
+        <p class="editable" id="sizingConclusion">A 221 GB volume gives 63 GB of headroom above the estimated peak footprint. Monitor actual usage in the Namespace Usage Explorer and adjust if usage consistently exceeds 75% of configured size.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const widget = document.getElementById('cachingWidget');
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const editModeToggle = document.getElementById('editModeToggle');
+      const editableElements = document.querySelectorAll('.editable');
+
+      // 1. TAB SYSTEM
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.getAttribute('data-tab');
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(tabId).classList.add('active');
+        });
+      });
+
+      // 2. BLOG AUTHOR EDIT MODE SWITCH
+      editModeToggle.addEventListener('change', () => {
+        const isActive = editModeToggle.checked;
+        if (isActive) {
+          widget.classList.add('edit-mode-active');
+          editableElements.forEach(el => {
+            el.setAttribute('contenteditable', 'true');
+            el.addEventListener('paste', handleCleanPaste);
+          });
+        } else {
+          widget.classList.remove('edit-mode-active');
+          editableElements.forEach(el => {
+            el.removeAttribute('contenteditable');
+            el.removeEventListener('paste', handleCleanPaste);
+          });
+        }
+      });
+
+      function handleCleanPaste(e) {
+        e.preventDefault();
+        const text = e.clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, text);
+      }
+
+      // 3. DYNAMIC CALCULATOR FORMULA & SYNCING SYSTEM
+      const codebaseSelect = document.getElementById('codebaseSelect');
+      const selectTriggerText = document.getElementById('selectTriggerText');
+      const targetSlider = document.getElementById('targetSlider');
+      const targetValue = document.getElementById('targetValue');
+      const engineerSlider = document.getElementById('engineerSlider');
+      const engineerValue = document.getElementById('engineerValue');
+
+      const footprintVal = document.getElementById('footprintVal');
+      const footprintDetails = document.getElementById('footprintDetails');
+      const recommendVal = document.getElementById('recommendVal');
+      const recommendDetails = document.getElementById('recommendDetails');
+      const progressMaxVal = document.getElementById('progressMaxVal');
+      const progressBarFill = document.getElementById('progressBarFill');
+      const progressBarUnfilled = document.getElementById('progressBarUnfilled');
+      const codebaseSpecificNote = document.getElementById('codebaseSpecificNote');
+      
+      const undersizedPill = document.getElementById('undersizedPill');
+      const correctsizedPill = document.getElementById('correctsizedPill');
+      const sizingConclusion = document.getElementById('sizingConclusion');
+
+      // Database formulas and weights for each codebase type
+      const formulas = {
+        rust: {
+          name: "Rust monorepo",
+          targetWeight: 0.02, // 20MB per target
+          engineerWeight: 4.8, // 4.8GB per engineer
+          note: "rlib files and debug symbols are large. Active monorepos exceed 50GB in days."
+        },
+        go: {
+          name: "Go monorepo",
+          targetWeight: 0.012, // 12MB per target
+          engineerWeight: 2.4, // 2.4GB per engineer
+          note: "Go binaries and static linking can create moderately large caches. Warm volumes speed up link times."
+        },
+        jvm: {
+          name: "JVM (Java / Kotlin / Scala)",
+          targetWeight: 0.015, // 15MB per target
+          engineerWeight: 3.2, // 3.2GB per engineer
+          note: "JVM caches grow due to fat JARs, class files, and annotation processors. NVMe speed helps parallel execution."
+        },
+        python: {
+          name: "Python",
+          targetWeight: 0.003, // 3MB per target
+          engineerWeight: 0.8, // 0.8GB per engineer
+          note: "Python caches are lightweight but virtual environments and packages accumulate. Eviction is rarely a problem."
+        },
+        cpp: {
+          name: "C++ monorepo",
+          targetWeight: 0.026, // 26MB per target
+          engineerWeight: 6.2, // 6.2GB per engineer
+          note: "C++ intermediate object files and precompiled headers are extremely large. High NVMe headroom is highly recommended."
+        },
+        mixed: {
+          name: "Mixed (Go + Rust)",
+          targetWeight: 0.017, // 17MB per target
+          engineerWeight: 3.6, // 3.6GB per engineer
+          note: "Mixed codebases suffer from both large Go link sizes and massive Rust intermediate libraries."
+        }
+      };
+
+      let selectedCodebaseKey = 'rust';
+
+      // Dropdown Toggling Actions
+      selectTriggerText.addEventListener('click', (e) => {
+        e.stopPropagation();
+        codebaseSelect.classList.toggle('open');
+      });
+
+      document.addEventListener('click', () => {
+        codebaseSelect.classList.remove('open');
+      });
+
+      const options = document.querySelectorAll('.custom-select-option');
+      options.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          options.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          
+          selectedCodebaseKey = opt.getAttribute('data-value');
+          selectTriggerText.textContent = formulas[selectedCodebaseKey].name;
+          
+          codebaseSelect.classList.remove('open');
+          calculateSizing();
+        });
+      });
+
+      // Slider Binding Actions
+      targetSlider.addEventListener('input', () => {
+        targetValue.textContent = Number(targetSlider.value).toLocaleString();
+        calculateSizing();
+      });
+
+      engineerSlider.addEventListener('input', () => {
+        engineerValue.textContent = engineerSlider.value;
+        calculateSizing();
+      });
+
+      // The core math calculator
+      function calculateSizing() {
+        const formula = formulas[selectedCodebaseKey];
+        const targets = parseInt(targetSlider.value) || 0;
+        const engineers = parseInt(engineerSlider.value) || 0;
+
+        // Estimated output footprint
+        const footprint = Math.round(targets * formula.targetWeight + engineers * formula.engineerWeight);
+        
+        // Recommended volume (1.4x buffer)
+        const recommended = Math.round(footprint * 1.4);
+        
+        // Headroom
+        const freeGB = recommended - footprint;
+        
+        // Under-sized volume (approx 84% of footprint)
+        const undersized = Math.round(footprint * 0.84);
+
+        // Update Footprint
+        footprintVal.textContent = `${footprint} GB`;
+        footprintDetails.textContent = `${footprint} GB for ${targets.toLocaleString()} ${formula.name} targets + ${engineers} engineers writing local results`;
+
+        // Update Recommended
+        recommendVal.textContent = `${recommended} GB`;
+        recommendDetails.textContent = `${recommended} GB (1.4x buffer to avoid silent eviction)`;
+
+        // Update Progress Bar Configuration
+        progressMaxVal.textContent = `${recommended} GB configured`;
+        codebaseSpecificNote.textContent = formula.note;
+
+        const filledPercentage = Math.round((footprint / recommended) * 100);
+        progressBarFill.style.width = `${filledPercentage}%`;
+        progressBarFill.textContent = `${footprint} GB used`;
+        progressBarUnfilled.textContent = `${freeGB} GB free`;
+
+        // Update Sizing Row Badges
+        undersizedPill.textContent = `${undersized} GB vol.`;
+        correctsizedPill.textContent = `${recommended} GB vol.`;
+
+        // Update Sizing Conclusion Box
+        sizingConclusion.textContent = `A ${recommended} GB volume gives ${freeGB} GB of headroom above the estimated peak footprint. Monitor actual usage in the Namespace Usage Explorer and adjust if usage consistently exceeds 75% of configured size.`;
+      }
+
+      // Initial run to build calculator weights
+      calculateSizing();
+    });
+  </script>
+
+</body>
+</html>

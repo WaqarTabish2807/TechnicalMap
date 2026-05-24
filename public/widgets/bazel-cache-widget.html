@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Modern Geist and Geist Mono Fonts for SaaS/Developer Aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <style>
+    html, body {
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
+    /* CSS DESIGN SYSTEM VARIABLES */
+    :root {
+      --bg-main: #0B0D10;
+      --bg-card: #12151B;
+      --bg-card-hover: #171B23;
+      --border-color: #212631;
+      --border-color-active: #384252;
+
+      --text-primary: #F3F4F6;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+
+      --color-hit: #10B981;
+      --color-hit-bg: rgba(16, 185, 129, 0.1);
+      --color-hit-border: rgba(16, 185, 129, 0.2);
+
+      --color-miss: #F43F5E;
+      --color-miss-bg: rgba(244, 63, 94, 0.1);
+      --color-miss-border: rgba(244, 63, 94, 0.2);
+
+      --color-latency: #F59E0B;
+      --color-latency-bg: rgba(245, 158, 11, 0.1);
+
+      --color-rt: #8B5CF6;
+      --color-rt-bg: rgba(139, 92, 246, 0.1);
+
+      --color-blue: #3B82F6;
+      --color-blue-bg: rgba(59, 130, 246, 0.1);
+
+      --transition-speed: 0.25s;
+      --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'Geist Mono', SFMono-Regular, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: transparent !important;
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+     background: transparent !important; background-color: transparent !important; }
+
+    /* AUTHOR TOOLBAR STYLE - ONLY VISIBLE DURING DESIGN/EDITING */
+    .author-toolbar { display: none !important; /* removed */
+      width: 100%;
+      max-width: 900px;
+      background: rgba(18, 21, 27, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+    }
+
+    .toggle-switch-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 22px;
+      background-color: #2D3748;
+      border-radius: 11px;
+      transition: background-color var(--transition-speed);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: #FFF;
+      top: 2px;
+      left: 2px;
+      transition: transform var(--transition-speed);
+    }
+
+    input#editModeToggle {
+      display: none;
+    }
+
+    input#editModeToggle:checked+.toggle-switch {
+      background-color: var(--color-blue);
+    }
+
+    input#editModeToggle:checked+.toggle-switch::after {
+      transform: translateX(22px);
+    }
+
+
+
+    /* MAIN CONTAINER */
+    .caching-widget-container {
+      width: 100%;
+      max-width: 900px;
+      background-color: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      position: relative;
+      transition: border-color var(--transition-speed);
+    }
+
+    /* EDIT MODE OVERLAYS AND HIGHLIGHTS */
+    .caching-widget-container.edit-mode-active {
+      border-color: var(--color-blue);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+    }
+
+    .edit-mode-active .editable {
+      outline: 1px dashed rgba(59, 130, 246, 0.5) !important;
+      outline-offset: 3px;
+      cursor: text;
+    }
+
+    .edit-mode-active .editable:hover {
+      background: rgba(59, 130, 246, 0.05);
+      outline-color: var(--color-blue) !important;
+    }
+
+    .edit-mode-active .editable:focus {
+      outline: 2px solid var(--color-blue) !important;
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    /* TAB NAVIGATION */
+    .widget-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px 12px;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      transition: all var(--transition-speed);
+      min-height: 72px;
+    }
+
+    .tab-btn:hover {
+      background-color: var(--bg-card-hover);
+      border-color: var(--border-color-active);
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background-color: var(--bg-card);
+      border-color: var(--color-blue);
+      color: var(--text-primary);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+
+    .tab-btn span {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      font-weight: 400;
+    }
+
+    /* WIDGET CONTENT CARD */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out forwards;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* HEADERS */
+    .section-meta {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .section-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* LEGEND */
+    .legend-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-miss {
+      background-color: var(--color-miss);
+    }
+
+    .dot-hit {
+      background-color: var(--color-hit);
+    }
+
+    .dot-rt {
+      background-color: var(--text-muted);
+    }
+
+    /* SEQUENCE FLOW LIST */
+    .sequence-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .sequence-step {
+      display: flex;
+      gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all var(--transition-speed);
+    }
+
+    .sequence-step:hover {
+      border-color: var(--border-color-active);
+      transform: translateY(-1px);
+    }
+
+    .step-number-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1F2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Color variations for step circles */
+    .step-miss .step-number {
+      background-color: var(--color-miss-bg);
+      border-color: var(--color-miss);
+      color: var(--color-miss);
+    }
+
+    .step-hit .step-number {
+      background-color: var(--color-hit-bg);
+      border-color: var(--color-hit);
+      color: var(--color-hit);
+    }
+
+    .step-skipped {
+      opacity: 0.5;
+    }
+
+    .step-details {
+      flex-grow: 1;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .step-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background-color: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: lowercase;
+    }
+
+    .badge-latency {
+      background: var(--color-latency-bg);
+      color: var(--color-latency);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-miss {
+      background: var(--color-miss-bg);
+      color: var(--color-miss);
+      border: 1px solid var(--color-miss-border);
+    }
+
+    .badge-hit {
+      background: var(--color-hit-bg);
+      color: var(--color-hit);
+      border: 1px solid var(--color-hit-border);
+    }
+
+    .step-body {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+     background: transparent !important; background-color: transparent !important; }
+
+    /* NET RESULT BOXES */
+    .net-result-box {
+      border-left: 3px solid var(--color-miss);
+      background: rgba(244, 63, 94, 0.03);
+      padding: 20px;
+      border-radius: 0 12px 12px 0;
+      margin-bottom: 24px;
+    }
+
+    .net-result-box.persistent {
+      border-left-color: var(--color-blue);
+      background: rgba(59, 130, 246, 0.03);
+    }
+
+    .net-result-box strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .net-result-box p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* LIFECYCLE TIMELINE */
+    .timeline-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 36px;
+      margin-bottom: 20px;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 24px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 6px;
+      bottom: 6px;
+      width: 1px;
+      background-color: var(--border-color);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 24px;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -20px;
+      top: 4px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--bg-main);
+      border: 2px solid var(--border-color);
+      transform: translateX(-0.5px);
+    }
+
+    .timeline-dot.cold {
+      border-color: var(--color-latency);
+    }
+
+    .timeline-dot.warm,
+    .timeline-dot.parallel {
+      border-color: var(--color-hit);
+    }
+
+    .timeline-dot.failed {
+      border-color: var(--color-miss);
+    }
+
+    .timeline-header {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .timeline-body {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+     background: transparent !important; background-color: transparent !important; }
+
+    /* CHART CONTAINER (TAB 3) */
+    .chart-section {
+      margin-bottom: 40px;
+    }
+
+    .chart-section:last-child {
+      margin-bottom: 24px;
+    }
+
+    .chart-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 80px;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .chart-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .chart-bar-wrapper {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      height: 8px;
+      border-radius: 4px;
+      width: 100%;
+      position: relative;
+    }
+
+    .chart-bar {
+      height: 100%;
+      border-radius: 4px;
+      width: 0%;
+      /* Animates via JS or styled inline */
+      transition: width 1s cubic-bezier(0.1, 0.8, 0.2, 1);
+    }
+
+    .chart-bar.green {
+      background: linear-gradient(90deg, #059669, var(--color-hit));
+    }
+
+    .chart-bar.orange {
+      background: linear-gradient(90deg, #D97706, var(--color-latency));
+    }
+
+    .chart-bar.red {
+      background: linear-gradient(90deg, #E11D48, var(--color-miss));
+    }
+
+    .chart-value {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      text-align: right;
+    }
+
+    /* CALLOUT INFO BOX */
+    .callout-box {
+      display: flex;
+      gap: 16px;
+      background: rgba(59, 130, 246, 0.03);
+      border: 1px solid rgba(59, 130, 246, 0.15);
+      border-left: 3px solid var(--color-blue);
+      border-radius: 0 12px 12px 0;
+      padding: 20px;
+    }
+
+    .callout-box p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* COMPARISON TABLE (TAB 4) */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-bottom: 32px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    th {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 14px 16px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.01);
+      color: var(--text-primary);
+    }
+
+    .table-feature {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* STATS PANELS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all var(--transition-speed);
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-color-active);
+    }
+
+    .stat-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-card.red-metric .stat-value {
+      color: var(--color-miss);
+    }
+
+    .stat-card.green-metric .stat-value {
+      color: var(--color-hit);
+    }
+
+    .stat-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* RESPONSIVE STYLES */
+    @media (max-width: 480px) {
+      .widget-tabs {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .tab-btn {
+        min-height: auto;
+        padding: 12px;
+      }
+
+      .chart-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .chart-value {
+        text-align: left;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .caching-widget-container {
+        padding: 20px;
+      }
+
+
+    }
+  html, body { overflow: hidden;  background: transparent !important; background-color: transparent !important;  background: transparent !important; background-color: transparent !important; }
+  </style>
+</head>
+
+<body>
+
+  <!-- THE INTERACTIVE WIDGET -->
+  <div class="caching-widget-container" id="cachingWidget">
+
+    <!-- Tab Controls -->
+    <div class="widget-tabs">
+      <button class="tab-btn active" data-tab="tab-ephemeral">
+        Ephemeral runner
+        <span class="editable">(GitHub-hosted)</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-persistent">
+        Persistent runner
+        <span class="editable">(Namespace)</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-latency">
+        Cache latency
+        <span class="editable">comparison</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-why-fail">
+        Why actions/cache
+        <span class="editable">fails</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: EPHEMERAL RUNNER -->
+    <div class="tab-content active" id="tab-ephemeral">
+      <div class="section-meta editable">PER-ACTION LOOKUP SEQUENCE ON EVERY CI RUN</div>
+      <h3 class="section-title editable">Each of these 6 steps fires for every single action in your build graph. On a
+        5,000-action monorepo with 80% remote cache hit rate, steps 1–3 execute 5,000 times. Steps 4–5 execute 4,000
+        times. Nothing is ever skipped at the disk layer.</h3>
+
+      <div class="legend-container">
+        <div class="legend-item">
+          <div class="legend-dot dot-miss"></div>
+          <span class="editable">Cache miss</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot dot-hit"></div>
+          <span class="editable">Cache hit</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot dot-rt"></div>
+          <span class="editable">Network round-trip</span>
+        </div>
+      </div>
+
+      <div class="sequence-flow">
+        <!-- Step 1 -->
+        <div class="sequence-step">
+          <div class="step-number-container">
+            <div class="step-number">1</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Bazel computes action key</span>
+              <span class="badge badge-latency editable">~0ms</span>
+            </div>
+            <div class="step-body editable">
+              Hashes input digests + command + whitelisted env vars for <code>compile_server</code>. Deterministic if
+              the build is hermetic; changes on every run if env vars or timestamps leak in.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="sequence-step step-miss">
+          <div class="step-number-container">
+            <div class="step-number">2</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Check <code>--disk_cache</code> (AC lookup)</span>
+              <span class="badge badge-miss editable">miss</span>
+            </div>
+            <div class="step-body editable">
+              Runner is freshly provisioned. The disk cache directory exists but holds zero entries. Every action misses
+              here, always. Cost per miss: ~0.5ms. Total cost on 5,000 actions: ~2.5s of wasted disk I/O returning
+              nothing.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="sequence-step">
+          <div class="step-number-container">
+            <div class="step-number">3</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Check <code>--remote_cache</code> (AC lookup over network)</span>
+              <span class="badge badge-latency editable">20-100ms</span>
+            </div>
+            <div class="step-body editable">
+              Round-trip to GCS or S3. Even if Bazel issues these in parallel (32 concurrent requests on a 16-vCPU
+              runner), 5,000 lookups ÷ 32 = 156 batches × 50ms avg = ~8 seconds of pure AC lookup latency per build.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="sequence-step step-hit">
+          <div class="step-number-container">
+            <div class="step-number">4</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Remote AC returns hit: digest <code>a3f7...</code> for
+                <code>server.o</code></span>
+              <span class="badge badge-hit editable">hit</span>
+            </div>
+            <div class="step-body editable">
+              The AC result contains output names mapped to content digests — not the actual file bytes. Bazel now knows
+              what <code>server.o</code> should look like, but doesn't have the file.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="sequence-step step-miss">
+          <div class="step-number-container">
+            <div class="step-number">5</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Check disk for blob <code>a3f7...</code></span>
+              <span class="badge badge-miss editable">miss</span>
+            </div>
+            <div class="step-body editable">
+              Bazel checks the local CAS (disk cache) for the blob before fetching it over the network. Empty disk =
+              miss. This is a second wasted disk lookup per cached output file.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="sequence-step">
+          <div class="step-number-container">
+            <div class="step-number">6</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Fetch blob <code>a3f7...</code> from remote CAS</span>
+              <span class="badge badge-latency editable">30-200ms per file</span>
+            </div>
+            <div class="step-body editable">
+              Bazel downloads the actual bytes from GCS/S3. For a Rust compile action, <code>server.rlib</code> can be
+              5–30MB. At 100MB/s effective throughput, a 10MB blob costs 100ms. Multiply by 4,000 cache hits.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="net-result-box">
+        <p class="editable"><strong>Net result:</strong> On every run, steps 2 and 5 add ~2.5s of wasted disk lookups
+          that return nothing. Steps 3 and 6 together add 8–15 minutes of network time for a 5,000-action graph with 80%
+          hit rate. The disk cache flag is set. It contributes nothing.</p>
+      </div>
+    </div>
+
+    <!-- TAB 2: PERSISTENT RUNNER -->
+    <div class="tab-content" id="tab-persistent">
+      <div class="section-meta editable">PER-ACTION LOOKUP SEQUENCE WITH NAMESPACE CACHE VOLUME</div>
+      <h3 class="section-title editable">Same 5,000-action build. The Cache Volume has been warm since run 2. Steps 2
+        and 5 now return hits at NVMe speed. Steps 3, 4, 6 execute only for actions that genuinely changed since the
+        last committed cache state.</h3>
+
+      <div class="legend-container">
+        <div class="legend-item">
+          <div class="legend-dot dot-miss"></div>
+          <span class="editable">Cache miss</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot dot-hit"></div>
+          <span class="editable">Cache hit</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot dot-rt"></div>
+          <span class="editable">Network round-trip</span>
+        </div>
+      </div>
+
+      <div class="sequence-flow">
+        <!-- Step 1 -->
+        <div class="sequence-step">
+          <div class="step-number-container">
+            <div class="step-number">1</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Bazel computes action key</span>
+              <span class="badge badge-latency editable">~0ms</span>
+            </div>
+            <div class="step-body editable">
+              Identical to ephemeral. Action key computation doesn't change. If your build is hermetic, the key is
+              stable run-to-run and the Cache Volume entry remains valid.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="sequence-step step-hit">
+          <div class="step-number-container">
+            <div class="step-number">2</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Check mounted Cache Volume (AC lookup)</span>
+              <span class="badge badge-hit editable">hit — &lt;1ms</span>
+            </div>
+            <div class="step-body editable">
+              The Cache Volume persists across job teardown. Bazel's <code>--disk_cache</code> is pointed at the mounted
+              NVMe volume. For unchanged actions, the AC entry is already there from the last committed run. NVMe
+              latency: 0.1–0.5ms per lookup.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5* -->
+        <div class="sequence-step step-hit">
+          <div class="step-number-container">
+            <div class="step-number">5*</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Check Cache Volume for blob <code>a3f7...</code></span>
+              <span class="badge badge-hit editable">hit — &lt;1ms</span>
+            </div>
+            <div class="step-body editable">
+              The blob is already in the local CAS on the Cache Volume. Bazel reads it from NVMe directly. No network
+              request. No waiting. Steps 3, 4, and 6 are skipped entirely for this action.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3-4-6 -->
+        <div class="sequence-step step-skipped">
+          <div class="step-number-container">
+            <div class="step-number">3–6</div>
+          </div>
+          <div class="step-details">
+            <div class="step-header">
+              <span class="step-title editable">Remote cache consulted only for genuinely changed actions</span>
+              <span class="badge badge-latency editable">skipped for warm items</span>
+            </div>
+            <div class="step-body editable">
+              Steps 3, 4, 6 still execute for the ~20% of actions that missed the local cache (i.e., files that actually
+              changed). The remote cache handles the delta; the Cache Volume handles the stable majority.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="net-result-box persistent">
+        <p class="editable"><strong>Net result:</strong> For 4,000 cached actions, lookup cost drops from ~8s (network
+          AC) + download time to ~4s total (NVMe reads). Network traffic shifts from the full 80% of the graph to only
+          the 20% that actually changed. Run 2 onwards is where the Cache Volume pays off.</p>
+      </div>
+
+      <!-- Cache Volume Lifecycle -->
+      <h4 class="timeline-title editable">Cache Volume lifecycle across runs</h4>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot cold"></div>
+          <div class="timeline-header editable">Run 1 — cold start</div>
+          <div class="timeline-body editable">
+            Cache Volume is empty. All actions fall through to remote cache. At the end of the run (exit 0), Bazel's
+            output is committed as the new cache state. Volume now holds the full build output.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot warm"></div>
+          <div class="timeline-header editable">Run 2 — warm cache, incremental change</div>
+          <div class="timeline-body editable">
+            Job forks the committed cache state into a private copy. 80% of actions hit the NVMe volume at &lt;1ms. Only
+            actions downstream of changed files hit the remote cache. Committed at exit 0.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot parallel"></div>
+          <div class="timeline-header editable">Parallel PRs — concurrent forks</div>
+          <div class="timeline-body editable">
+            PR A and PR B each get their own fork of the last committed state. Their writes don't collide. Last job to
+            complete successfully wins the commit. Deterministic Bazel outputs make this safe.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot failed"></div>
+          <div class="timeline-header editable">Failed job — cache unchanged</div>
+          <div class="timeline-body editable">
+            If a job exits non-zero, its cache writes are discarded. The committed state reverts to the last successful
+            run. No partial-build corruption.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: CACHE LATENCY -->
+    <div class="tab-content" id="tab-latency">
+      <div class="chart-section">
+        <div class="section-meta editable">CACHE LOOKUP LATENCY PER OPERATION</div>
+        <h3 class="section-desc editable">Each AC lookup is one network round-trip (or one disk read). The latency
+          difference between a warm NVMe volume and a cross-region GCS bucket compounds across thousands of actions per
+          build.</h3>
+
+        <div class="chart-list">
+          <div class="chart-row">
+            <div class="chart-label editable">Namespace NVMe hot tier</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar green" data-chart-val="1"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="1">&lt; 1ms</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label editable">Local SSD (same region)</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar green" data-chart-val="4"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="4">1-4ms</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label editable">S3 (same region)</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar orange" data-chart-val="40"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="40">20-40ms</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label editable">GCS (same region)</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar orange" data-chart-val="50"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="50">25-50ms</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label editable">GCS (cross-region)</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar red" data-chart-val="100"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="100">50-100ms</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label editable">S3 (cross-region)</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar red" data-chart-val="120"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="120">60-120ms</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-section" style="border-top: 1px solid var(--border-color); padding-top: 32px;">
+        <div class="section-meta editable">Cumulative AC lookup overhead — 5,000-action build, 80% hit rate</div>
+        <h3 class="section-desc editable">Bazel issues AC lookups in parallel. Assuming 32 concurrent requests on a
+          16-vCPU runner:</h3>
+
+        <div class="chart-list">
+          <div class="chart-row">
+            <div class="chart-label editable">Namespace NVMe</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar green" data-chart-val="2"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="2">~2s total</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label editable">GCS same-region</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar orange" data-chart-val="7"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="7">~4-7s</div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label editable">GCS cross-region</div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar red" data-chart-val="16"></div>
+            </div>
+            <div class="chart-value editable" data-target-val="16">~8-16s</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout-box">
+        <p class="editable">AC lookup overhead is separate from blob download time. A 5,000-action build with 80% hit
+          rate also downloads ~4,000 cached blobs over the network on an ephemeral runner. That's the larger cost — and
+          it also disappears with a warm Cache Volume.</p>
+      </div>
+    </div>
+
+    <!-- TAB 4: WHY ACTIONS/CACHE FAILS -->
+    <div class="tab-content" id="tab-why-fail">
+      <div class="section-meta editable">WHY ACTIONS/CACHE WITH ~/.CACHE/BAZEL DOESN'T CLOSE THE GAP</div>
+      <h3 class="section-desc editable">The standard workaround is to archive the Bazel cache directory at the end of
+        each run and restore it at the start of the next. Each failure mode below is a separate problem; most teams hit
+        several simultaneously.</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="editable">Failure mode</th>
+              <th class="editable">Cause</th>
+              <th class="editable">Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="table-feature editable">Restore overhead</td>
+              <td class="editable">Single-threaded tar extract before job can start</td>
+              <td class="editable">2-4 min added to every run for large Rust/C++ caches</td>
+            </tr>
+            <tr>
+              <td class="table-feature editable">10GB repo cap</td>
+              <td class="editable">GitHub enforces a 10GB limit per repo</td>
+              <td class="editable">Active Rust monorepos exceed this in days; eviction causes cold starts</td>
+            </tr>
+            <tr>
+              <td class="table-feature editable">Branch key mismatch</td>
+              <td class="editable">Cache key includes branch name; PRs miss <code>main</code> cache</td>
+              <td class="editable">Every PR runs cold regardless of how warm the main branch cache is</td>
+            </tr>
+            <tr>
+              <td class="table-feature editable">CPU-bound tar on 2-core runner</td>
+              <td class="editable">Standard GitHub runner has 2 vCPUs; tar is single-threaded by default</td>
+              <td class="editable">Save/restore is slower than the download it's trying to avoid</td>
+            </tr>
+            <tr>
+              <td class="table-feature editable">Stale snapshot analysis</td>
+              <td class="editable">Restored cache is a snapshot; Bazel re-analyses full graph to verify</td>
+              <td class="editable">Full graph re-analysis adds 60-90s even when all outputs are valid</td>
+            </tr>
+            <tr>
+              <td class="table-feature editable">No concurrent write safety</td>
+              <td class="editable">Two parallel jobs restore the same cache key, each writes a full archive</td>
+              <td class="editable">Second writer overwrites first; cache state is non-deterministic</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card red-metric">
+          <div class="stat-title editable">Time lost to restore (Rust monorepo, ~20GB cache)</div>
+          <div class="stat-value editable">3-5 min</div>
+          <div class="stat-subtitle editable">per run, before a single Bazel action fires</div>
+        </div>
+        <div class="stat-card green-metric">
+          <div class="stat-title editable">Cache Volume restore overhead (Namespace)</div>
+          <div class="stat-value editable">&lt; 2s</div>
+          <div class="stat-subtitle editable">NVMe volume mount, no tar, no network download</div>
+        </div>
+      </div>
+
+      <div class="net-result-box">
+        <p class="editable"><strong>The underlying problem:</strong> <code>actions/cache</code> is designed for
+          dependency archives (node_modules, pip packages) that are read once and rarely change. Bazel's output cache is
+          written continuously, grows unboundedly, and needs fine-grained invalidation, not coarse archive snapshots.
+          Fitting it into <code>actions/cache</code> is technically possible and operationally fragile.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const widget = document.getElementById('cachingWidget');
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const editModeToggle = document.getElementById('editModeToggle');
+      const editableElements = document.querySelectorAll('.editable');
+
+      // 1. TAB SELECTION SYSTEM
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.getAttribute('data-tab');
+
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+
+          btn.classList.add('active');
+          const targetTab = document.getElementById(tabId);
+          targetTab.classList.add('active');
+
+          // Trigger layout reflow for charts animation
+          if (tabId === 'tab-latency') {
+            animateCharts();
+          }
+        });
+      });
+
+      // 2. CHART TRANSITIONS & ANIMATION SYSTEM
+      function animateCharts() {
+        const bars = document.querySelectorAll('.chart-bar');
+
+        // Custom scaling factor based on max units to fit 100% nicely
+        // Tab 3 Section 1 max is 120ms
+        // Tab 3 Section 2 max is 16s
+        bars.forEach(bar => {
+          const val = parseFloat(bar.getAttribute('data-chart-val')) || 0;
+          const isLatencyTabSection1 = bar.closest('.chart-section').querySelector('.section-meta').textContent.includes('LATENCY');
+
+          let percentage = 0;
+          if (isLatencyTabSection1) {
+            // scale relative to 120ms
+            percentage = Math.min((val / 120) * 100, 100);
+          } else {
+            // scale relative to 16s
+            percentage = Math.min((val / 16) * 100, 100);
+          }
+
+          // Apply slight delay for a cascading entrance effect
+          setTimeout(() => {
+            bar.style.width = `${Math.max(percentage, 1.5)}%`;
+          }, 50);
+        });
+      }
+
+      // Initialize charts when page loads
+      animateCharts();
+
+      // 3. BLOG AUTHOR "EDIT MODE" SYSTEM
+      editModeToggle.addEventListener('change', () => {
+        const isActive = editModeToggle.checked;
+
+        if (isActive) {
+          widget.classList.add('edit-mode-active');
+          editableElements.forEach(el => {
+            el.setAttribute('contenteditable', 'true');
+            // Prevent styling paste issues
+            el.addEventListener('paste', handleCleanPaste);
+            // Dynamic chart updater
+            if (el.classList.contains('chart-value')) {
+              el.addEventListener('input', handleChartValueEdit);
+            }
+          });
+        } else {
+          widget.classList.remove('edit-mode-active');
+          editableElements.forEach(el => {
+            el.removeAttribute('contenteditable');
+            el.removeEventListener('paste', handleCleanPaste);
+            if (el.classList.contains('chart-value')) {
+              el.removeEventListener('input', handleChartValueEdit);
+            }
+          });
+        }
+      });
+
+      function handleCleanPaste(e) {
+        e.preventDefault();
+        const text = e.clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, text);
+      }
+
+      // Parses edited metrics in real time and scales bars dynamically
+      function handleChartValueEdit(e) {
+        const el = e.target;
+        const targetId = el.getAttribute('data-target-val');
+        const bar = document.querySelector(`.chart-bar[data-chart-val="${targetId}"]`);
+
+        if (!bar) return;
+
+        // Try extracting numbers (e.g., "50-100ms" -> 100, "~4-7s" -> 7)
+        const text = el.textContent;
+        const matches = text.match(/\d+/g);
+
+        if (matches && matches.length > 0) {
+          // Use the last number in the range if a range exists
+          const val = parseFloat(matches[matches.length - 1]);
+          bar.setAttribute('data-chart-val', val);
+
+          const isLatencyTabSection1 = bar.closest('.chart-section').querySelector('.section-meta').textContent.includes('LATENCY');
+          let percentage = 0;
+          if (isLatencyTabSection1) {
+            percentage = Math.min((val / 120) * 100, 100);
+          } else {
+            percentage = Math.min((val / 16) * 100, 100);
+          }
+          bar.style.width = `${Math.max(percentage, 1.5)}%`;
+        }
+      }
+
+
+    });
+  </script>
+
+
+  <script>
+    /* Report height to parent iframe exactly once on load + after each tab switch */
+    var _lastReported = 0;
+    function reportHeight() {
+      // Use offsetHeight of the widget container, not scrollHeight (avoids layout thrash)
+      var container = document.getElementById('cachingWidget');
+      var h = container ? container.offsetHeight : document.documentElement.offsetHeight;
+      if (h === _lastReported) return; // nothing changed, skip
+      _lastReported = h;
+      window.parent.postMessage({ type: 'iframeHeight', height: h }, '*');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(reportHeight, 100);
+      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          setTimeout(reportHeight, 350); // wait for animation to finish
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

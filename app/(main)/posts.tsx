@@ -1,4 +1,5 @@
 import svgPaths from "../_images/svg-paths.png";
+import bazelRemoteCache from "../_images/bazel-remote-cache.png";
 
 export function XIcon() {
   return (
@@ -19,6 +20,15 @@ export function XIcon() {
 }
 
 export const posts = [
+  {
+    slug: "bazel-remote-cache-github-actions-ephemeral-runners",
+    title: "Bazel Remote Cache on GitHub Actions: Why Ephemeral Runners Hurt You and How to Fix It",
+    description:
+      "Every GitHub Actions job starts with an empty disk cache, forcing Bazel onto high-latency network calls. Learn why ephemeral runners hurt your build times and how to resolve it with Namespace's persistent NVMe Cache Volumes.",
+    shortDescription: "Solving Bazel remote cache latency on ephemeral GitHub Actions runners.",
+    editedAt: "2026-05-20",
+    image: bazelRemoteCache,
+  },
   {
     slug: "open-claw-tutorial",
     title: "OpenClaw Tutorial: Installation to First Chat Setup",
@@ -47,3 +57,4 @@ export const posts = [
     image: svgPaths,
   },
 ];
+

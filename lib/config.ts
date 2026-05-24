@@ -1,1 +1,1 @@
-export const BASE_URL = "https://nan.fyi";
+export const BASE_URL = "https://technicalmap.blog";
