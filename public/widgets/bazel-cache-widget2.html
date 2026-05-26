@@ -881,6 +881,16 @@
       border-color: var(--color-hit-border);
     }
 
+    .estimate-box.orange-theme {
+      background: var(--color-latency-bg);
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    .estimate-box.red-theme {
+      background: var(--color-miss-bg);
+      border-color: var(--color-miss-border);
+    }
+
     .estimate-label {
       font-size: 0.8rem;
       font-weight: 600;
@@ -889,6 +899,14 @@
 
     .green-theme .estimate-label {
       color: var(--color-hit);
+    }
+
+    .orange-theme .estimate-label {
+      color: var(--color-latency);
+    }
+
+    .red-theme .estimate-label {
+      color: var(--color-miss);
     }
 
     .estimate-value {
@@ -902,6 +920,14 @@
 
     .green-theme .estimate-value {
       color: var(--color-hit);
+    }
+
+    .orange-theme .estimate-value {
+      color: var(--color-latency);
+    }
+
+    .red-theme .estimate-value {
+      color: var(--color-miss);
     }
 
     .estimate-details {
@@ -1027,23 +1053,35 @@
     }
 
     /* RESPONSIVE STYLES */
-    @media (max-width: 480px) {
+    @media (max-width: 768px) {
       .widget-tabs {
+        display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
+        margin-bottom: 24px;
       }
-      
       .tab-btn {
-        min-height: auto;
-        padding: 12px;
+        width: 100%;
+        min-height: 64px;
+        padding: 10px 8px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
       }
 
       .tier-cards-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
       }
 
       .properties-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
       }
 
       .sharing-branches-container {
@@ -1060,10 +1098,12 @@
       .calc-row {
         grid-template-columns: 1fr;
         gap: 8px;
+        margin-bottom: 16px;
       }
 
       .estimates-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
       }
 
       .sizing-flow-row {
@@ -1074,9 +1114,24 @@
       .fork-row {
         grid-template-columns: 1fr;
         gap: 8px;
+        align-items: flex-start;
+      }
+
+      .caching-widget-container {
+        padding: 16px;
+        border-radius: 12px;
+      }
+
+      .sequence-step {
+        padding: 14px;
+        gap: 10px;
+      }
+
+      .timeline {
+        padding-left: 14px;
       }
     }
-  html, body { overflow: hidden;  background: transparent !important; background-color: transparent !important;  background: transparent !important; background-color: transparent !important; }
+  html, body { overflow: hidden;  background: transparent !important; background-color: transparent !important; }
   </style>
 </head>
 <body>
@@ -1555,22 +1610,24 @@
       });
 
       // 2. BLOG AUTHOR EDIT MODE SWITCH
-      editModeToggle.addEventListener('change', () => {
-        const isActive = editModeToggle.checked;
-        if (isActive) {
-          widget.classList.add('edit-mode-active');
-          editableElements.forEach(el => {
-            el.setAttribute('contenteditable', 'true');
-            el.addEventListener('paste', handleCleanPaste);
-          });
-        } else {
-          widget.classList.remove('edit-mode-active');
-          editableElements.forEach(el => {
-            el.removeAttribute('contenteditable');
-            el.removeEventListener('paste', handleCleanPaste);
-          });
-        }
-      });
+      if (editModeToggle) {
+        editModeToggle.addEventListener('change', () => {
+          const isActive = editModeToggle.checked;
+          if (isActive) {
+            widget.classList.add('edit-mode-active');
+            editableElements.forEach(el => {
+              el.setAttribute('contenteditable', 'true');
+              el.addEventListener('paste', handleCleanPaste);
+            });
+          } else {
+            widget.classList.remove('edit-mode-active');
+            editableElements.forEach(el => {
+              el.removeAttribute('contenteditable');
+              el.removeEventListener('paste', handleCleanPaste);
+            });
+          }
+        });
+      }
 
       function handleCleanPaste(e) {
         e.preventDefault();
@@ -1640,6 +1697,7 @@
       };
 
       let selectedCodebaseKey = 'rust';
+      let configuredCapacity = 221; // Default starting capacity for Rust monorepo
 
       // Dropdown Toggling Actions
       selectTriggerText.addEventListener('click', (e) => {
@@ -1662,6 +1720,12 @@
           selectTriggerText.textContent = formulas[selectedCodebaseKey].name;
           
           codebaseSelect.classList.remove('open');
+          
+          // Re-calculate configured capacity based on standard default values for the new codebase type
+          const formula = formulas[selectedCodebaseKey];
+          const defaultFootprint = Math.round(5500 * formula.targetWeight + 10 * formula.engineerWeight);
+          configuredCapacity = Math.round(defaultFootprint * 1.4);
+          
           calculateSizing();
         });
       });
@@ -1689,9 +1753,6 @@
         // Recommended volume (1.4x buffer)
         const recommended = Math.round(footprint * 1.4);
         
-        // Headroom
-        const freeGB = recommended - footprint;
-        
         // Under-sized volume (approx 84% of footprint)
         const undersized = Math.round(footprint * 0.84);
 
@@ -1704,13 +1765,31 @@
         recommendDetails.textContent = `${recommended} GB (1.4x buffer to avoid silent eviction)`;
 
         // Update Progress Bar Configuration
-        progressMaxVal.textContent = `${recommended} GB configured`;
+        progressMaxVal.textContent = `${configuredCapacity} GB configured`;
         codebaseSpecificNote.textContent = formula.note;
 
-        const filledPercentage = Math.round((footprint / recommended) * 100);
-        progressBarFill.style.width = `${filledPercentage}%`;
+        const filledPercentage = Math.round((footprint / configuredCapacity) * 100);
+        progressBarFill.style.width = `${Math.min(filledPercentage, 100)}%`;
         progressBarFill.textContent = `${footprint} GB used`;
+        
+        const freeGB = Math.max(configuredCapacity - footprint, 0);
         progressBarUnfilled.textContent = `${freeGB} GB free`;
+
+        // Update recommended card theme class & progress bar color based on usage percentage of configured size
+        const recommendCard = recommendVal.closest('.estimate-box');
+        if (recommendCard) {
+          recommendCard.classList.remove('green-theme', 'orange-theme', 'red-theme');
+          if (filledPercentage <= 75) {
+            recommendCard.classList.add('green-theme');
+            progressBarFill.style.backgroundColor = 'var(--color-hit)';
+          } else if (filledPercentage <= 100) {
+            recommendCard.classList.add('orange-theme');
+            progressBarFill.style.backgroundColor = 'var(--color-latency)';
+          } else {
+            recommendCard.classList.add('red-theme');
+            progressBarFill.style.backgroundColor = 'var(--color-miss)';
+          }
+        }
 
         // Update Sizing Row Badges
         undersizedPill.textContent = `${undersized} GB vol.`;
@@ -1744,6 +1823,19 @@
           setTimeout(reportHeight, 350); // wait for animation to finish
         });
       });
+
+      // ResizeObserver to dynamically update height when size changes (wrapping, resize, calculator sliders, codebase changes, etc)
+      if (typeof ResizeObserver !== 'undefined') {
+        var container = document.getElementById('cachingWidget');
+        if (container) {
+          var ro = new ResizeObserver(function() {
+            reportHeight();
+          });
+          ro.observe(container);
+        }
+      } else {
+        window.addEventListener('resize', reportHeight);
+      }
     });
   </script>
 </body>

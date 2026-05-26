@@ -695,37 +695,68 @@
     }
 
     /* RESPONSIVE STYLES */
-    @media (max-width: 480px) {
+    @media (max-width: 768px) {
       .widget-tabs {
+        display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
+        margin-bottom: 24px;
       }
-
       .tab-btn {
-        min-height: auto;
-        padding: 12px;
+        width: 100%;
+        min-height: 64px;
+        padding: 10px 8px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+      .tab-btn span {
+        font-size: 0.7rem;
       }
 
       .chart-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px;
+        margin-bottom: 12px;
       }
-
+      .chart-label {
+        grid-column: 1 / span 2;
+        font-size: 0.82rem;
+      }
+      .chart-bar-wrapper {
+        grid-column: 1;
+      }
       .chart-value {
-        text-align: left;
+        grid-column: 2;
+        text-align: right;
+        font-size: 0.8rem;
       }
 
       .stats-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
       }
 
       .caching-widget-container {
-        padding: 20px;
+        padding: 16px;
+        border-radius: 12px;
       }
 
+      .sequence-step {
+        padding: 14px;
+        gap: 10px;
+      }
 
+      .timeline {
+        padding-left: 14px;
+      }
     }
-  html, body { overflow: hidden;  background: transparent !important; background-color: transparent !important;  background: transparent !important; background-color: transparent !important; }
+  html, body { overflow: hidden;  background: transparent !important; background-color: transparent !important; }
   </style>
 </head>
 
@@ -1250,31 +1281,33 @@
       animateCharts();
 
       // 3. BLOG AUTHOR "EDIT MODE" SYSTEM
-      editModeToggle.addEventListener('change', () => {
-        const isActive = editModeToggle.checked;
+      if (editModeToggle) {
+        editModeToggle.addEventListener('change', () => {
+          const isActive = editModeToggle.checked;
 
-        if (isActive) {
-          widget.classList.add('edit-mode-active');
-          editableElements.forEach(el => {
-            el.setAttribute('contenteditable', 'true');
-            // Prevent styling paste issues
-            el.addEventListener('paste', handleCleanPaste);
-            // Dynamic chart updater
-            if (el.classList.contains('chart-value')) {
-              el.addEventListener('input', handleChartValueEdit);
-            }
-          });
-        } else {
-          widget.classList.remove('edit-mode-active');
-          editableElements.forEach(el => {
-            el.removeAttribute('contenteditable');
-            el.removeEventListener('paste', handleCleanPaste);
-            if (el.classList.contains('chart-value')) {
-              el.removeEventListener('input', handleChartValueEdit);
-            }
-          });
-        }
-      });
+          if (isActive) {
+            widget.classList.add('edit-mode-active');
+            editableElements.forEach(el => {
+              el.setAttribute('contenteditable', 'true');
+              // Prevent styling paste issues
+              el.addEventListener('paste', handleCleanPaste);
+              // Dynamic chart updater
+              if (el.classList.contains('chart-value')) {
+                el.addEventListener('input', handleChartValueEdit);
+              }
+            });
+          } else {
+            widget.classList.remove('edit-mode-active');
+            editableElements.forEach(el => {
+              el.removeAttribute('contenteditable');
+              el.removeEventListener('paste', handleCleanPaste);
+              if (el.classList.contains('chart-value')) {
+                el.removeEventListener('input', handleChartValueEdit);
+              }
+            });
+          }
+        });
+      }
 
       function handleCleanPaste(e) {
         e.preventDefault();
@@ -1333,6 +1366,19 @@
           setTimeout(reportHeight, 350); // wait for animation to finish
         });
       });
+
+      // ResizeObserver to dynamically update height when size changes (wrapping, resize, etc)
+      if (typeof ResizeObserver !== 'undefined') {
+        var container = document.getElementById('cachingWidget');
+        if (container) {
+          var ro = new ResizeObserver(function() {
+            reportHeight();
+          });
+          ro.observe(container);
+        }
+      } else {
+        window.addEventListener('resize', reportHeight);
+      }
     });
   </script>
 </body>

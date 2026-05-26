@@ -175,14 +175,20 @@ const Nav = styled("nav", {
 const PageWrapper = styled("main", {
     width: `min(80rem, 100%)`,
     margin: "0 auto",
-    padding: "$16 0",
+    padding: "$8 0",
+    "@md": {
+        padding: "$16 0",
+    },
 });
 
 const Title = styled("h1", {
-    fontSize: "4rem",
+    fontSize: "2.25rem",
     fontFamily: "$serif",
     lineHeight: "$title",
     fontWeight: 500,
+    "@md": {
+        fontSize: "4rem",
+    },
 });
 
 const Blurb = styled("p", {

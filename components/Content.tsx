@@ -87,6 +87,8 @@ export const Content = styled("div", {
   },
 
   table: {
+    display: "block",
+    overflowX: "auto",
     width: "100%",
     borderCollapse: "collapse",
     marginTop: "$6",
