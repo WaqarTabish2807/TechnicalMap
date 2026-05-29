@@ -74,6 +74,9 @@ importers:
       '@vercel/postgres':
         specifier: ^0.4.0
         version: 0.4.2
+      '@vercel/speed-insights':
+        specifier: ^2.0.0
+        version: 2.0.0(next@16.0.10(@babel/core@7.26.9)(babel-plugin-macros@3.1.0)(react-dom@19.0.0-rc.1(react@19.0.0-rc.1))(react@19.0.0-rc.1))(react@19.0.0-rc.1)
       '@xstate/react':
         specifier: ^3.0.1
         version: 3.2.2(@types/react@19.0.10)(react@19.0.0-rc.1)(xstate@4.38.3)
@@ -2392,6 +2395,32 @@ packages:
   '@vercel/postgres@0.4.2':
     resolution: {integrity: sha512-jwGBhozSPQBuFVgiXLunpW8iys3qMGyXhTSp7xKVrZjD3hJHunO+i1J6Yq2VP2FNSw36lSg1J2vDzkdOE3303g==}
     engines: {node: '>=14.6'}
+
+  '@vercel/speed-insights@2.0.0':
+    resolution: {integrity: sha512-jwkNcrTeafWxjmWq4AHBaptSqZiJkYU5adLC9QBSqeim0GcqDMgN5Ievh8OG1rJ6W3A4l1oiP7qr9CWxGuzu3w==}
+    peerDependencies:
+      '@sveltejs/kit': ^1 || ^2
+      next: '>= 13'
+      nuxt: '>= 3'
+      react: ^18 || ^19 || ^19.0.0-rc
+      svelte: '>= 4'
+      vue: ^3
+      vue-router: ^4
+    peerDependenciesMeta:
+      '@sveltejs/kit':
+        optional: true
+      next:
+        optional: true
+      nuxt:
+        optional: true
+      react:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+      vue-router:
+        optional: true
 
   '@vitest/expect@0.31.4':
     resolution: {integrity: sha512-tibyx8o7GUyGHZGyPgzwiaPaLDQ9MMuCOrc03BYT0nryUuhLbL7NV2r/q98iv5STlwMgaKuFJkgBW/8iPKwlSg==}
@@ -7987,6 +8016,11 @@ snapshots:
       bufferutil: 4.0.7
       utf-8-validate: 6.0.3
       ws: 8.14.1(bufferutil@4.0.7)(utf-8-validate@6.0.3)
+
+  '@vercel/speed-insights@2.0.0(next@16.0.10(@babel/core@7.26.9)(babel-plugin-macros@3.1.0)(react-dom@19.0.0-rc.1(react@19.0.0-rc.1))(react@19.0.0-rc.1))(react@19.0.0-rc.1)':
+    optionalDependencies:
+      next: 16.0.10(@babel/core@7.26.9)(babel-plugin-macros@3.1.0)(react-dom@19.0.0-rc.1(react@19.0.0-rc.1))(react@19.0.0-rc.1)
+      react: 19.0.0-rc.1
 
   '@vitest/expect@0.31.4':
     dependencies:

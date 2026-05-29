@@ -10,6 +10,7 @@ import { clsx } from "clsx";
 import "./styles.css";
 import { AuthProvider } from "./svg-paths/provider";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Provider } from "./provider";
 
 export const metadata = {
@@ -122,6 +123,7 @@ export default function RootLayout({
           <Provider>{children}</Provider>
         </AuthProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
