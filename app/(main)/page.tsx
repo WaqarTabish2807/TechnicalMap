@@ -170,8 +170,13 @@ export default function HomePage() {
             className="flex gap-4 p-4 pr-0 bg-gray3 border border-gray8 border-dashed relative items-center hover:bg-gray2"
             href="#"
           >
-            <span className="flex flex-col lg:flex-row lg:gap-4 lg:items-center gap-1">
-              <span className="font-medium">The Complete Technical Writing Course</span>
+            <span className="flex flex-col lg:flex-row lg:gap-4 lg:items-center gap-2">
+              <span className="flex items-center gap-2 shrink-0">
+                <span className="font-medium">The Complete Technical Writing Course</span>
+                <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-wider text-blue11 bg-blue3 border border-blue6 rounded uppercase shrink-0">
+                  Coming Soon
+                </span>
+              </span>
               <span className="text-sm">
                 Stop writing boring docs. Learn to craft technical content that developers actually want to read.
               </span>
