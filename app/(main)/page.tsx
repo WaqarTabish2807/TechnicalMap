@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
 import { SubscribeButton } from "./subscribe";
 import { posts, XIcon } from "./posts";
+import { ClientNameTray } from "../../components/ClientNameTray";
 
 function Post({
   post,
@@ -48,6 +49,9 @@ function Post({
           active ? "bg-gray5" : "bg-gray4",
         )}
       >
+        {post.client && (
+          <ClientNameTray client={post.client} active={active} />
+        )}
         <img
           className="shrink-0 h-min"
           src={post.image.src}

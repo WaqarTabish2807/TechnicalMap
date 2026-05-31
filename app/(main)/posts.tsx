@@ -28,6 +28,7 @@ export const posts = [
     shortDescription: "Solving Bazel remote cache latency on ephemeral GitHub Actions runners.",
     editedAt: "2026-05-20",
     image: bazelRemoteCache,
+    client: "Namespace",
   },
   {
     slug: "open-claw-tutorial",

@@ -18,6 +18,7 @@ import { MobileBottomBar } from "~/components/MobileBottomBar";
 import { Link } from "~/components/Link";
 import { Content } from "~/components/Content";
 // import { ThemeToggle } from "~/components/ThemeToggle";
+import { ClientNameTray } from "~/components/ClientNameTray";
 
 export async function getStaticProps(context: GetStaticPropsContext) {
     return {
@@ -97,6 +98,9 @@ export default function PostPage({ content }: { content: Post }) {
             </Nav>
             <Article as="article">
                 <Header>
+                    {frontmatter.client && (
+                        <ClientNameTray client={frontmatter.client} active={false} />
+                    )}
                     <LastUpdated>
                         {formatter.format(new Date(frontmatter.editedAt))}
                     </LastUpdated>
@@ -201,6 +205,7 @@ const LastUpdated = styled("p", {
 });
 
 const Header = styled("header", {
+    position: "relative",
     marginBottom: "$16",
 
     "> :not(:last-child)": {
