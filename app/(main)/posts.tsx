@@ -1,5 +1,8 @@
 import svgPaths from "../_images/svg-paths.png";
-import bazelRemoteCache from "../_images/bazel-remote-cache.png";
+import bazelCacheArt from "../_images/bazel-cache-art.png";
+import coldEmailArt from "../_images/cold-email-art.png";
+import openClawArt from "../_images/open-claw-art.png";
+import perfectTitleArt from "../_images/perfect-title-art.png";
 
 export function XIcon() {
   return (
@@ -21,13 +24,22 @@ export function XIcon() {
 
 export const posts = [
   {
+    slug: "cold-email-outreach-guide",
+    title: "Cold Email",
+    description:
+      "Tired of sending resumes into black-hole career mailboxes? Learn a value-first, 7-step cold-email playbook that bypassed gatekeepers and got replies from active founders at high-growth DevTool startups.",
+    shortDescription: "A value-first, 7-step cold-email playbook to land high-paying technical clients.",
+    editedAt: "2026-06-01",
+    image: coldEmailArt,
+  },
+  {
     slug: "bazel-remote-cache-github-actions-ephemeral-runners",
     title: "Bazel Remote Cache on GitHub Actions: Why Ephemeral Runners Hurt You and How to Fix It",
     description:
       "Every GitHub Actions job starts with an empty disk cache, forcing Bazel onto high-latency network calls. Learn why ephemeral runners hurt your build times and how to resolve it with Namespace's persistent NVMe Cache Volumes.",
     shortDescription: "Solving Bazel remote cache latency on ephemeral GitHub Actions runners.",
     editedAt: "2026-05-20",
-    image: bazelRemoteCache,
+    image: bazelCacheArt,
     client: "Namespace",
   },
   {
@@ -37,7 +49,7 @@ export const posts = [
       "Set up OpenClaw bot in 20 minutes. Complete guide to install, configure, and chat with your local AI agent via Telegram.",
     shortDescription: "Complete guide to install and setup OpenClaw.",
     editedAt: "2026-02-13",
-    image: svgPaths,
+    image: openClawArt,
   },
   {
     slug: "perfect-title",
@@ -46,7 +58,7 @@ export const posts = [
       "Stop writing boring titles. Use this interactive A/B tester to craft headlines that get clicked.",
     shortDescription: "Interactive A/B tester for blog titles.",
     editedAt: "2026-01-24",
-    image: svgPaths, // Temporary placeholder until we generate a new one
+    image: perfectTitleArt,
   },
   {
     slug: "svg-paths",
