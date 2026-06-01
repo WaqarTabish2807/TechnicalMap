@@ -48,7 +48,7 @@ export function ClientNameTray({ client, active }: ClientNameTrayProps) {
         </span>
       </div>
 
-      {/* 2. Desktop Version: Stunning 3D Standing Tent Card / Name Tray */}
+      {/* 2. Desktop Version: Stunning Straight Golden Brass Plaque */}
       <div 
         className="client-tray-desktop"
         style={{
@@ -58,63 +58,44 @@ export function ClientNameTray({ client, active }: ClientNameTrayProps) {
           zIndex: 20,
           pointerEvents: "none",
           userSelect: "none",
-          transform: active ? "translateY(-88%) scale(1.03)" : "translateY(-82%) scale(1)",
+          transform: active ? "translateY(-65%) scale(1.04)" : "translateY(-50%) scale(1)",
           transition: "all 300ms cubic-bezier(0.16, 1, 0.3, 1)",
-          transformOrigin: "bottom",
+          transformOrigin: "bottom center",
         }}
       >
-        <div style={{ position: "relative", display: "flex", alignItems: "flex-end" }}>
-          {/* Realistically skewed drop-shadow */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {/* Symmetrical Underneath Drop-Shadow */}
           <div 
             style={{
               position: "absolute",
               bottom: "-4px",
-              left: "-8px",
-              right: "4px",
-              height: "8px",
+              left: "6px",
+              right: "6px",
+              height: "6px",
               backgroundColor: "rgba(45, 34, 10, 0.35)",
-              filter: "blur(3px)",
-              borderRadius: "9999px",
-              transform: "skewX(-24deg)",
-              transformOrigin: "right",
-              opacity: active ? 0.6 : 0.9,
+              filter: "blur(2.5px)",
+              borderRadius: "50%",
+              opacity: active ? 0.6 : 0.8,
+              transform: active ? "scaleX(1.05)" : "scaleX(1)",
               transition: "all 300ms ease-out",
             }}
           />
 
-          {/* Left-Side Shadow Triangle (creates the 3D folded profile of the tent card) */}
-          <div 
-            style={{
-              width: "12px",
-              height: "26px",
-              background: "linear-gradient(to bottom right, #A37F29, #705213, #453005)",
-              clipPath: "polygon(100% 0, 0 100%, 100% 100%)",
-              transform: "skewY(-16deg)",
-              marginRight: "-0.7px",
-              position: "relative",
-              zIndex: 10,
-            }}
-          />
-
-          {/* Front Panel (slanted forward and skewed slightly) */}
+          {/* Front Plaque Panel (Resting Straight, Symmetrical) */}
           <div 
             style={{
               position: "relative",
               padding: "2px 14px",
               background: "linear-gradient(135deg, #FFFDF5 0%, #FCE8B3 30%, #F5CE6C 70%, #D49E25 100%)",
-              borderTop: "1.5px solid #E0B243",
-              borderBottom: "1.5px solid #D49E25",
-              borderRight: "1.5px solid #D49E25",
+              border: "1.5px solid #D49E25",
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
               alignItems: "center",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 4px rgba(45,34,10,0.15)",
+              boxShadow: "inset 0 1.2px 0 rgba(255,255,255,0.65), 0 2px 4px rgba(45,34,10,0.15)",
               overflow: "hidden",
-              borderRadius: "0 1.5px 1.5px 0",
-              transform: "skewY(-6deg) rotateY(-6deg)",
-              transformOrigin: "bottom left",
-              width: "110px",
+              borderRadius: "2px",
+              width: "112px",
               height: "28px",
             }}
           >
@@ -123,8 +104,8 @@ export function ClientNameTray({ client, active }: ClientNameTrayProps) {
               style={{
                 position: "absolute",
                 inset: "2px",
-                border: "1.2px solid rgba(196, 146, 33, 0.3)",
-                borderRadius: "0.5px",
+                border: "1.2px solid rgba(196, 146, 33, 0.35)",
+                borderRadius: "1px",
                 pointerEvents: "none"
               }}
             />
