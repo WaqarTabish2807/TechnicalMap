@@ -3,6 +3,7 @@ import bazelCacheArt from "../_images/bazel-cache-art.png";
 import coldEmailArt from "../_images/cold-email-art.png";
 import openClawArt from "../_images/open-claw-art.png";
 import perfectTitleArt from "../_images/perfect-title-art.png";
+import composioLinearAgentArt from "../_images/composio-linear-agent-art.png";
 
 export function XIcon() {
   return (
@@ -23,6 +24,16 @@ export function XIcon() {
 }
 
 export const posts = [
+  {
+    slug: "building-github-pr-review-agent-composio-linear-sync",
+    title: "Building a GitHub PR Review Agent with Composio and Linear Sync",
+    description:
+      "Stop doing manual chore work. Learn how to build an AI agent that automatically reviews pull requests, writes structural feedback, and moves linked Linear tickets to 'In Review' in real-time.",
+    shortDescription: "Automate code reviews and Linear issue updates with Composio's v3 SDK.",
+    editedAt: "2026-06-11",
+    image: composioLinearAgentArt,
+    client: "Composio",
+  },
   {
     slug: "cold-email-outreach-guide",
     title: "Cold Email",

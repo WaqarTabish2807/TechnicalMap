@@ -1,0 +1,452 @@
+---
+title: "Building a GitHub PR Review Agent with Composio and Linear Sync"
+blurb: "Learn how to build an AI agent using Composio v3, OpenAI, and FastAPI that reviews PR diffs and keeps Linear issues synced in real-time."
+description: "Step-by-step guide to building a custom GitHub PR review agent with Composio v3 SDK, OpenAI's GPT-4o, and FastAPI. Includes webhook triggers and automatic status updates in Linear."
+publishedAt: "2026-06-11"
+editedAt: "2026-06-11"
+client: Composio
+---
+
+Every dev team using GitHub and Linear does the same thing manually: a PR opens, someone has to look at the diff, write a comment, and then flip the linked Linear issue to "In Review." If the reviewer is in a different timezone, that sequence can take hours. 
+
+This guide walks through building an agent that handles it the moment a PR lands, using Composio's v3 SDK, OpenAI, and FastAPI.
+
+The agent listens for GitHub pull request events via a Composio webhook trigger, fetches the diff, generates a structured code review, posts it as a PR comment, and updates the status of the linked Linear issue, all without any human intervention.
+
+## What You'll Build
+
+Five files, roughly 350 lines of code total:
+- `agent.py`: the agentic loop that runs against the diff
+- `webhook.py`: the FastAPI route that receives Composio trigger events
+- `main.py`: the server entry point
+- `setup_auth.py`: OAuth connection flow for GitHub and Linear
+- `setup_trigger.py`: registers the `GITHUB_PULL_REQUEST_EVENT` trigger on your repo
+
+## Prerequisites
+
+- **Python 3.10** or higher
+- A **Composio account** (free tier works)
+- An **OpenAI API key**
+- A **GitHub repository** you own
+- A **Linear workspace**
+
+### Project Structure
+
+```text
+Composio-PR-Agent/
+├── agent.py
+├── webhook.py
+├── main.py
+├── setup_auth.py
+├── setup_trigger.py
+├── requirements.txt
+└── .env.template
+```
+
+***
+
+## Step 1: Install Dependencies
+
+```bash
+pip install composio openai fastapi uvicorn python-dotenv
+```
+
+Your `requirements.txt`:
+
+```text
+composio
+openai
+fastapi
+uvicorn
+python-dotenv
+```
+
+> [!NOTE]
+> Composio's v3 SDK works the same way across LLM providers since tools are returned in the native format of whatever provider you initialize.
+
+## Step 2: Environment Configuration
+
+Create a `.env` file based on `.env.template`:
+
+```env
+COMPOSIO_API_KEY=your_composio_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o
+USER_EMAIL=your_email@domain.com
+GITHUB_AUTH_CONFIG_ID=ac_github_config_id_here
+LINEAR_AUTH_CONFIG_ID=ac_linear_config_id_here
+COMPOSIO_WEBHOOK_SECRET=your_composio_webhook_secret_here
+```
+
+The `GITHUB_AUTH_CONFIG_ID` and `LINEAR_AUTH_CONFIG_ID` values use Composio's v3 nano ID format. They'll start with `ac_`, and you'll get them from the Composio dashboard under **Integrations** after creating auth configs for GitHub and Linear. These are not connection IDs, they're the configuration templates that tell Composio which OAuth app to use.
+
+![](/images/github-pr-review-agent/composio-integrations.png)
+*Creating integration configurations in the Composio dashboard.*
+
+## Step 3: Connect Your GitHub and Linear Accounts
+
+`setup_auth.py` handles the OAuth flow for both services in sequence. It uses Composio's `connected_accounts.link()` method (the v3 equivalent of the old `initiate_connection`):
+
+```python
+import os
+import sys
+from dotenv import load_dotenv
+from composio import Composio
+
+load_dotenv()
+
+def main():
+    api_key = os.getenv("COMPOSIO_API_KEY")
+    user_email = os.getenv("USER_EMAIL")
+    github_id = os.getenv("GITHUB_AUTH_CONFIG_ID")
+    linear_id = os.getenv("LINEAR_AUTH_CONFIG_ID")
+
+    composio = Composio(api_key=api_key)
+
+    # Initiate GitHub OAuth
+    print("[GitHub] Initiating OAuth connection...")
+    github_request = composio.connected_accounts.link(
+        user_id=user_email,
+        auth_config_id=github_id,
+        allow_multiple=True,
+    )
+    print(f" Link: {github_request.redirect_url}\n")
+
+    # Initiate Linear OAuth
+    print("[Linear] Initiating OAuth connection...")
+    linear_request = composio.connected_accounts.link(
+        user_id=user_email,
+        auth_config_id=linear_id,
+        allow_multiple=True,
+    )
+    print(f" Link: {linear_request.redirect_url}\n")
+
+    # Block until both complete
+    print("Waiting for GitHub connection...")
+    github_request.wait_for_connection()
+    print(" GitHub connected!")
+
+    print("Waiting for Linear connection...")
+    linear_request.wait_for_connection()
+    print(" Linear connected!")
+
+if __name__ == "__main__":
+    main()
+```
+
+Run it:
+
+```bash
+python setup_auth.py
+```
+
+The script prints two OAuth URLs. Open each in your browser, complete authorization, and the script's `wait_for_connection()` calls block until Composio confirms both accounts are live. 
+
+This is the v3 pattern; previous SDK versions used `toolset.initiate_connection()` and separate entity handling. The new approach ties everything to `user_id`, which maps directly to your email.
+
+![](/images/github-pr-review-agent/composio-oauth-link.png)
+*Completing the OAuth connection flow in the browser.*
+
+## Step 4: Register the GitHub PR Trigger
+
+`setup_trigger.py` registers `GITHUB_PULL_REQUEST_EVENT` on a specific repo. This is a one-time setup per repository:
+
+```python
+import os
+import sys
+import argparse
+from dotenv import load_dotenv
+from composio import Composio
+
+load_dotenv()
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--owner", help="GitHub owner or org")
+    parser.add_argument("--repo", help="Repository name")
+    args = parser.parse_args()
+
+    api_key = os.getenv("COMPOSIO_API_KEY")
+    user_email = os.getenv("USER_EMAIL")
+
+    owner = args.owner or os.getenv("GITHUB_OWNER")
+    repo = args.repo or os.getenv("GITHUB_REPO")
+
+    composio = Composio(api_key=api_key)
+
+    print(f"Registering trigger GITHUB_PULL_REQUEST_EVENT for {owner}/{repo}...")
+    trigger = composio.triggers.create(
+        slug="GITHUB_PULL_REQUEST_EVENT",
+        user_id=user_email,
+        trigger_config={
+            "owner": owner,
+            "repo": repo,
+        },
+    )
+    print(" Trigger registered!")
+    print(f"Trigger Info: {trigger}")
+
+if __name__ == "__main__":
+    main()
+```
+
+Run it:
+
+```bash
+python setup_trigger.py --owner your-github-username --repo your-repo-name
+```
+
+Composio will now forward any pull request event on that repository to your configured webhook URL. You set that URL in the Composio dashboard under **Project Settings > Webhooks**. For local development, you'll use `ngrok` to expose your local server, covered in Step 7.
+
+![](/images/github-pr-review-agent/composio-trigger-info.png)
+*Trigger registered successfully in the Composio dashboard.*
+
+## Step 5: The Webhook Handler
+
+`webhook.py` is a FastAPI router that receives Composio's forwarded events. It handles two different payload shapes because Composio's dashboard test events and real triggers send slightly different formats:
+
+```python
+from fastapi import APIRouter, Request, BackgroundTasks
+from agent import handle_pr_event
+
+router = APIRouter()
+
+@router.post("/webhook/github-pr")
+async def github_pr_webhook(request: Request, background_tasks: BackgroundTasks):
+    try:
+        payload = await request.json()
+        print(f"[Webhook] Received payload type: {payload.get('type')}")
+
+        event_type = payload.get("type", "")
+        pr_data = None
+
+        if event_type == "GITHUB_PULL_REQUEST_EVENT":
+            pr_data = payload.get("data", {})
+        elif event_type == "composio.trigger.message":
+            trigger_slug = payload.get("metadata", {}).get("trigger_slug", "")
+            if trigger_slug == "GITHUB_PULL_REQUEST_EVENT":
+                pr_data = payload.get("data", {}).get("payload") or payload.get("data", {})
+
+        if pr_data is not None:
+            action = pr_data.get("action") or pr_data.get("pull_request", {}).get("action", "")
+            print(f"[Webhook] Action: '{action}'")
+
+            if action in ["opened", "synchronize", "reopened", ""]:
+                background_tasks.add_task(handle_pr_event, pr_data)
+                return {"status": "processing", "message": "PR review agent triggered."}
+            else:
+                return {"status": "ignored", "reason": f"Action '{action}' is not reviewed."}
+        else:
+            return {"status": "ignored", "reason": "Event type not supported."}
+
+    except Exception as e:
+        print(f"[Webhook] Error: {e}")
+        return {"status": "error", "detail": str(e)}
+```
+
+Two things worth noting:
+1. The handler uses `BackgroundTasks` to run the agent asynchronously. The webhook returns immediately so Composio doesn't time out waiting for a response while the agent spends 30+ seconds talking to OpenAI and executing tools.
+2. The action filter (`"opened"`, `"synchronize"`, `"reopened"`) means the agent runs on new PRs and on pushes to existing PR branches, but not on label changes, review assignments, or other noise.
+
+> [!TIP]
+> The empty-string fallback on `action` handles dashboard test events that don't always include an action field. If you test from the Composio dashboard and your webhook silently ignores the event, double-check that part.
+
+## Step 6: The Agent
+
+`agent.py` is the core. It fetches tools from both the GitHub and Linear toolkits, builds a prompt from the PR payload, and runs a standard agentic loop until OpenAI stops requesting tool calls:
+
+```python
+import os
+import json
+from dotenv import load_dotenv
+from composio import Composio
+from openai import OpenAI
+
+load_dotenv()
+
+def handle_pr_event(pr_data: dict):
+    user_email = os.getenv("USER_EMAIL")
+    api_key = os.getenv("COMPOSIO_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    model_name = os.getenv("OPENAI_MODEL", "gpt-4o")
+
+    composio = Composio(api_key=api_key)
+    openai_client = OpenAI(api_key=openai_key)
+
+    # Fetch tools from both toolkits in one call
+    print("[Agent] Fetching GITHUB and LINEAR tools from Composio...")
+    tools = composio.tools.get(
+        user_id=user_email,
+        toolkits=["GITHUB", "LINEAR"],
+        limit=30,
+    )
+    print(f"[Agent] Retrieved {len(tools)} tools.")
+
+    # Normalize the PR payload, supports both flat and nested shapes
+    pr_url = pr_data.get("url") or pr_data.get("pull_request", {}).get("html_url", "")
+    pr_number = pr_data.get("number") or pr_data.get("pull_request", {}).get("number", 0)
+    pr_body = pr_data.get("description") or pr_data.get("pull_request", {}).get("body") or ""
+
+    repo_full_name = ""
+    if pr_url and "github.com/" in pr_url:
+        try:
+            parts = pr_url.split("github.com/")[-1].split("/")
+            repo_full_name = f"{parts[0]}/{parts[1]}"
+        except Exception:
+            pass
+
+    if not repo_full_name:
+        repo_full_name = pr_data.get("repository", {}).get("full_name", "")
+
+    # Fallback to test repo if critical fields are missing
+    if not pr_url or not pr_number or not repo_full_name:
+        print("[Agent] Missing PR details, falling back to test defaults.")
+        pr_url = pr_url or "https://github.com/WaqarTabish2807/Composio-PR-Agent/pull/1"
+        pr_number = pr_number or 1
+        repo_full_name = repo_full_name or "WaqarTabish2807/Composio-PR-Agent"
+        pr_body = pr_body or "Automated Test PR. WAQ-1"
+
+    prompt = f"""
+A PR was opened: {pr_url}
+PR #{pr_number} in repository {repo_full_name}
+PR description:
+\"\"\"
+{pr_body}
+\"\"\"
+
+Do the following in order:
+1. Get the list of modified files and their code diffs (patches) using
+   GITHUB_LIST_PULL_REQUESTS_FILES for repository '{repo_full_name}'
+   and pull number {pr_number}.
+2. Write a short structured code review (max 200 words): what looks good,
+   and any concerns.
+3. Post that review as a comment on PR #{pr_number} in '{repo_full_name}'
+   using GITHUB_CREATE_AN_ISSUE_COMMENT or
+   GITHUB_CREATE_A_REVIEW_COMMENT_FOR_A_PULL_REQUEST.
+4. If the PR description mentions a Linear issue ID (e.g. WAQ-1 or ENG-42),
+   extract the key and update that Linear issue status to "In Review".
+"""
+
+    messages = [{"role": "user", "content": prompt}]
+    step = 1
+
+    while True:
+        print(f"\n--- [Agent Step {step}] ---")
+        response = openai_client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            tools=tools,
+        )
+
+        assistant_message = response.choices[0].message
+
+        if assistant_message.content:
+            print(f"OpenAI Response:\n{assistant_message.content}")
+
+        if not assistant_message.tool_calls:
+            print("\n [Agent] Task complete.")
+            break
+
+        messages.append(assistant_message)
+        print("[Agent] Executing tool calls via Composio...")
+
+        results = composio.provider.handle_tool_calls(
+            user_id=user_email,
+            response=response,
+        )
+
+        for i, tool_call in enumerate(assistant_message.tool_calls):
+            output_data = results[i] if i < len(results) else {"error": "No result"}
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(output_data) if not isinstance(output_data, str) else output_data
+            })
+
+        step += 1
+```
+
+### How the Agent Loop Works
+
+- `composio.tools.get()` returns a list of OpenAI-formatted tool definitions directly. Because the v3 SDK initializes with the OpenAI provider by default, these drop straight into `openai_client.chat.completions.create(tools=tools)` without any conversion.
+- `composio.provider.handle_tool_calls()` takes the OpenAI response object, extracts the tool call inputs, executes them via Composio (which handles auth transparently against the connected accounts you set up in Step 3), and returns a list of results in the same order as the tool calls. The results index-match `assistant_message.tool_calls`, so you can zip them directly.
+- The prompt is opinionated about tool names: `GITHUB_LIST_PULL_REQUESTS_FILES` specifically returns the diff patches, which is what you need for a real review, not just the file list.
+- Composio's Linear toolkit understands natural-language status names like `"In Review"`, so you don't have to look up workflow state IDs.
+
+## Step 7: The Server
+
+`main.py` wires everything together:
+
+```python
+import uvicorn
+from fastapi import FastAPI
+from webhook import router as webhook_router
+
+app = FastAPI(
+    title="Composio PR Agent & Linear Sync",
+    description="Automated GitHub Code Review and Linear integration webhook server",
+    version="1.0.0"
+)
+
+@app.get("/")
+async def root():
+    return {
+        "status": "healthy",
+        "service": "Composio GitHub PR Review & Linear Sync Agent",
+        "endpoints": {
+            "health": "/",
+            "github_pr_webhook": "/webhook/github-pr"
+        }
+    }
+
+app.include_router(webhook_router)
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+```
+
+Start it:
+
+```bash
+python main.py
+```
+
+For local testing, expose the server with `ngrok`:
+
+```bash
+ngrok http 8000
+```
+
+Copy the `https://` forwarding URL ngrok gives you and paste it into the Composio dashboard under **Project Settings > Webhooks**. The full URL to add is `https://your-ngrok-url.ngrok.io/webhook/github-pr`.
+
+## Step 8: Test It End-to-End
+
+1. Open a pull request against your registered repository. 
+2. Include a Linear issue ID in the PR description (e.g. `WAQ-1` or whatever your team prefix is).
+3. Watch the server logs. You'll see the webhook arrive, the agent fetch tools, then step through the agentic loop, fetching the diff, composing the review, posting the PR comment, and updating Linear.
+
+![](/images/github-pr-review-agent/agent-terminal-logs.png)
+*Terminal output showing the full agent loop from `[Agent Step 1]` through `Task complete`.*
+
+![](/images/github-pr-review-agent/github-pr-comment.png)
+*The PR on GitHub with the agent's structured code review posted as a comment.*
+
+![](/images/github-pr-review-agent/linear-issue-status.png)
+*The Linear issue showing its status automatically changed to "In Review".*
+
+## How the v3 SDK Differs from Earlier Versions
+
+If you've used Composio before, three things will look different:
+1. **Unified Client**: The old SDK used `ComposioToolSet` classes tied to specific frameworks (`OpenAIToolSet`, `AnthropicToolSet`). The v3 SDK uses a single `Composio` client with a provider system. The default provider is OpenAI, which is why the tools list works directly in `openai_client.chat.completions.create()` without any wrapping.
+2. **Simplified ID Mapping**: `entity_id` is now `user_id` everywhere. Connections are initiated with `connected_accounts.link()` rather than `toolset.initiate_connection()`, and you now pass `auth_config_id` (an `ac_` prefixed nano ID) rather than an `integration_id` UUID.
+3. **Streamlined Execution**: Tool execution results come back through `composio.provider.handle_tool_calls()`, which takes the full provider response object and returns a list. The old pattern required iterating over tool calls and calling `toolset.execute_action()` on each one individually.
+
+## What the Agent Does Not Do (and How to Extend It)
+
+- **PR Merges**: The agent reviews diffs and updates Linear on open and sync events. It doesn't handle PR merges. To close Linear issues on merge, add `"closed"` to the action filter in `webhook.py` and add a fifth instruction to the prompt telling the agent to move the Linear issue to `"Done"` when the PR action is `"closed"` and `merged` is `True` in the payload.
+- **Multi-User Routing**: The agent uses a single `user_id` for all tool execution. If you want to run this for multiple team members, each person needs their own connected accounts, and you'd route `user_id` based on who opened the PR, available in `pr_data.get("pull_request", {}).get("user", {}).get("login")`, with a mapping from GitHub username to Composio user email stored wherever you keep your config.
+- **Review Length**: The prompt asks for a 200-word review. That's intentionally short so the comment doesn't drown the PR. If your team uses larger PRs, bump the word count or add file-by-file structure to the prompt.
+
+## What You've Built
+
+A webhook server that receives GitHub PR events from Composio, passes the PR diff to an OpenAI-powered agent with access to GitHub and Linear tools, posts a structured code review comment, and syncs the issue status, all in under 350 lines across five files. The Composio v3 SDK handles OAuth token management, tool schema generation, and tool execution routing so none of that plumbing appears in your code.
