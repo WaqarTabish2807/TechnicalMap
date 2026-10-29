@@ -22,7 +22,10 @@ export function SubscribeButton() {
   return <SubscribeForm onCancel={() => setIsOpen(false)} />;
 }
 
-export const subscribe = async (email: string) => {
+export const subscribe = async (
+  email: string,
+  tag?: string,
+): Promise<{ error?: string; success?: boolean; isNew?: boolean }> => {
   const isValidEmail = IsEmail.validate(email);
   if (!isValidEmail) {
     return { error: "Please enter a valid email address" };
@@ -30,7 +33,7 @@ export const subscribe = async (email: string) => {
   const response = await fetch("/api/subscribe", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, source: window.location.href }),
+    body: JSON.stringify({ email, source: window.location.href, tag }),
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
@@ -41,7 +44,8 @@ export const subscribe = async (email: string) => {
     }
     return { error: "Something went wrong. Please try again." };
   }
-  return { success: true };
+  const body = await response.json().catch(() => ({}));
+  return { success: true, isNew: body.isNew ?? true };
 };
 
 function SubscribeForm({ onCancel }: { onCancel: () => void }) {

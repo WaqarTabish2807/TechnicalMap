@@ -8,3 +8,6 @@ create table if not exists subscribers (
   source text,
   created_at timestamptz not null default now()
 );
+
+-- Tags for opt-in lists on top of the newsletter (e.g. 'course-waitlist').
+alter table subscribers add column if not exists tags text[] not null default '{}';

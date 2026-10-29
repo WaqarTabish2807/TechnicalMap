@@ -18,10 +18,6 @@ import { PracticeQuestionEditor, PracticeQuestion } from "./path-practice";
 import { Svg } from "./svg";
 import { PathHoverVisual } from "./path-hover-visual";
 import styles from "./page-section.module.css";
-import { useSession } from "../provider";
-import Image from "next/image";
-import { signOut } from "next-auth/react";
-import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 const sections = [
     "overview",
@@ -45,7 +41,6 @@ export const ContentWrapper = ({
     content: React.ReactNode;
 }) => {
     const pathName = usePathname();
-    const session = useSession();
     return (
         <IndexProvider numSections={numSections}>
             <article className="lg:border-r lg:border-gray8 leading-7 lg:w-[55ch] xl:w-[68ch] w-full lg:max-w-[50vw]">
@@ -71,30 +66,6 @@ export const ContentWrapper = ({
                             <FaGithub />
                         </a>
                     </motion.div>
-                    {session?.user && (
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <motion.button
-                                    className="shrink-0 ml-4"
-                                    animate={{ opacity: 1 }}
-                                    initial={{ opacity: 0 }}
-                                >
-                                    <Image
-                                        width="24"
-                                        height="24"
-                                        className="rounded-full"
-                                        src={session.user.image}
-                                        alt={session.user.username}
-                                    />
-                                </motion.button>
-                            </PopoverTrigger>
-                            <PopoverContent>
-                                <button className="w-full py-1" onClick={() => signOut()}>
-                                    Sign out
-                                </button>
-                            </PopoverContent>
-                        </Popover>
-                    )}
                 </header>
                 {prefix && (
                     <div

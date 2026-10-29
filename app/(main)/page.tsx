@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { FaGithub, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
 import { LINKS } from "~/lib/config";
 import { SubscribeButton } from "./subscribe";
+import { CourseWaitlist } from "./course-waitlist";
 import { posts, XIcon } from "./posts";
 import { ClientNameTray } from "../../components/ClientNameTray";
 
@@ -165,59 +166,7 @@ export default function HomePage() {
       </aside>
       <div className="bg-gray4 lg:border-l border-gray8">
         <div className="p-6 lg:p-10 border-b border-gray7 border-dashed">
-          <a
-            className="flex gap-4 p-4 pr-0 bg-gray3 border border-gray8 border-dashed relative items-center hover:bg-gray2"
-            href="#"
-          >
-            <span className="flex flex-col lg:flex-row lg:gap-4 lg:items-center gap-2">
-              <span className="flex items-center gap-2 shrink-0">
-                <span className="font-medium">The Complete Technical Writing Course</span>
-                <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-wider text-blue11 bg-blue3 border border-blue6 rounded uppercase shrink-0">
-                  Coming Soon
-                </span>
-              </span>
-              <span className="text-sm">
-                Stop writing boring docs. Learn to craft technical content that developers actually want to read.
-              </span>
-            </span>
-            <svg
-              className="ml-auto shrink-0"
-              width="24"
-              height="24"
-              fill="none"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M13.75 6.75L19.25 12L13.75 17.25"
-              />
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M19 12H4.75"
-              />
-            </svg>
-            <span className="text-gray9">
-              <span className="absolute -top-2 -right-2">
-                <XIcon />
-              </span>
-              <span className="absolute -top-2 -left-2">
-                <XIcon />
-              </span>
-              <span className="absolute -bottom-2 -right-2">
-                <XIcon />
-              </span>
-              <span className="absolute -bottom-2 -left-2">
-                <XIcon />
-              </span>
-            </span>
-          </a>
+          <CourseWaitlist />
         </div>
         <ul className="divide-y divide-gray7 divide-dashed">
           {posts.map((post) => (

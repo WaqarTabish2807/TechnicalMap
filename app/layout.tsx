@@ -8,7 +8,6 @@ import {
 import localFont from "next/font/local";
 import { clsx } from "clsx";
 import "./styles.css";
-import { AuthProvider } from "./svg-paths/provider";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Provider } from "./provider";
@@ -129,9 +128,7 @@ export default function RootLayout({
           "font-sans antialiased bg-gray4",
         )}
       >
-        <AuthProvider>
-          <Provider>{children}</Provider>
-        </AuthProvider>
+        <Provider>{children}</Provider>
         <Analytics />
         <SpeedInsights />
       </body>

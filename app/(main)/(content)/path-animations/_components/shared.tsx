@@ -22,7 +22,7 @@ export function CheckAnimationWrapper({
 }: {
   children: React.ReactNode;
   className?: string;
-  onPlay: () => Promise<void>;
+  onPlay?: () => Promise<void>;
 }) {
   const [playing, setPlaying] = useState(false);
   return (
@@ -30,6 +30,7 @@ export function CheckAnimationWrapper({
       className="overflow-hidden"
       variant="grid"
       controls={
+        onPlay && (
         <ToggleButton
           onClick={async () => {
             setPlaying(true);
@@ -40,6 +41,7 @@ export function CheckAnimationWrapper({
         >
           Play
         </ToggleButton>
+        )
       }
     >
       <div

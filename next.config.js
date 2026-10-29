@@ -4,22 +4,11 @@ const createMDX = require("@next/mdx");
 const nextConfig = {
   reactStrictMode: true,
 
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "avatars.githubusercontent.com",
-      },
-    ],
-  },
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
-  typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
-  }
+  async rewrites() {
+    // Browsers still ask for /favicon.ico; serve the SVG icon from app/icon.svg.
+    return [{ source: "/favicon.ico", destination: "/icon.svg" }];
+  },
 };
 
 const withMDX = createMDX({});
