@@ -36,3 +36,4 @@ yarn-error.log*
 _dist-content/
 old-src/
 subscribers.json
+.env*
