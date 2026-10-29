@@ -173,10 +173,11 @@ function subscribe(email?: string) {
   if (!email) {
     return;
   }
-  const params = new URLSearchParams({ email } as Record<string, string>);
   return new Promise((resolve, reject) => {
-    window.fetch(`/api/subscribe?${params}`, {
+    window.fetch("/api/subscribe", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, source: window.location.href }),
     }).then((response) => {
       if (response.ok) {
         resolve(response);

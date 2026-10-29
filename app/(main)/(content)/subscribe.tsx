@@ -48,7 +48,7 @@ export function Subscribe() {
       content={
         <p>
           {error ||
-            "Thanks for subscribing! Check your inbox for a confirmation email."}
+            "Almost there. Check your inbox and click the confirm link."}
         </p>
       }
     >
@@ -76,7 +76,7 @@ export function Subscribe() {
             )}
             type="email"
             name="email"
-            placeholder="nanda@example.com"
+            placeholder="you@startup.com"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);

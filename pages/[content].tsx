@@ -8,7 +8,7 @@ import Balancer from "react-wrap-balancer";
 import Image from "next/image";
 
 import { getAllPosts, getPost, type Post } from "~/lib/content.server";
-import { BASE_URL } from "~/lib/config";
+import { BASE_URL, SITE } from "~/lib/config";
 import { darkTheme, styled } from "~/stitches.config";
 
 import { Heading, Subheading } from "~/components/Heading";
@@ -19,6 +19,8 @@ import { Link } from "~/components/Link";
 import { Content } from "~/components/Content";
 // import { ThemeToggle } from "~/components/ThemeToggle";
 import { ClientNameTray } from "~/components/ClientNameTray";
+import { WorkWithMe } from "~/components/WorkWithMe";
+import { Comments } from "~/components/Comments";
 
 export async function getStaticProps(context: GetStaticPropsContext) {
     return {
@@ -48,6 +50,11 @@ export default function PostPage({ content }: { content: Post }) {
         [content.code]
     );
     const { frontmatter, headings, slug } = content;
+    const url = `${BASE_URL}/${slug}`;
+    const ogImage = `${BASE_URL}/og?${new URLSearchParams({
+        title: frontmatter.title,
+        ...(frontmatter.client ? { client: frontmatter.client } : {}),
+    })}`;
 
     useEffect(() => {
         const lastHeights = new WeakMap<HTMLIFrameElement, number>();
@@ -74,14 +81,43 @@ export default function PostPage({ content }: { content: Post }) {
     return (
         <PageWrapper>
             <Head>
-                <title>{frontmatter.title}</title>
+                <title>{`${frontmatter.title} | ${SITE.name}`}</title>
                 <meta name="description" content={frontmatter.description} />
-                <meta name="author" content="Waqar Tabish" />
+                <meta name="author" content={SITE.author} />
+                <link rel="canonical" href={url} />
+                <meta property="og:type" content="article" />
+                <meta property="og:site_name" content={SITE.name} />
                 <meta property="og:title" content={frontmatter.title} />
                 <meta property="og:description" content={frontmatter.description} />
-                <meta property="og:image" content={`${BASE_URL}/og/${slug}.png`} />
-                <meta property="og:url" content={`${BASE_URL}/${slug}`} />
+                <meta property="og:image" content={ogImage} />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
+                <meta property="og:url" content={url} />
+                <meta property="article:published_time" content={frontmatter.publishedAt} />
+                <meta property="article:modified_time" content={frontmatter.editedAt} />
                 <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:creator" content={SITE.twitter} />
+                <meta name="twitter:title" content={frontmatter.title} />
+                <meta name="twitter:description" content={frontmatter.description} />
+                <meta name="twitter:image" content={ogImage} />
+                <link rel="alternate" type="application/rss+xml" title={SITE.name} href={`${BASE_URL}/rss.xml`} />
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            "@context": "https://schema.org",
+                            "@type": "TechArticle",
+                            headline: frontmatter.title,
+                            description: frontmatter.description,
+                            image: ogImage,
+                            url,
+                            datePublished: frontmatter.publishedAt,
+                            dateModified: frontmatter.editedAt,
+                            author: { "@type": "Person", name: SITE.author, url: `${BASE_URL}/work` },
+                            publisher: { "@type": "Organization", name: SITE.name, url: BASE_URL },
+                        }),
+                    }}
+                />
             </Head>
             <MobileBottomBar headings={headings} />
             <Nav>
@@ -121,7 +157,9 @@ export default function PostPage({ content }: { content: Post }) {
                     }}
                 />
                 <NewsletterWrapper>
+                    <WorkWithMe client={frontmatter.client} />
                     <NewsletterForm />
+                    <Comments slug={slug} />
                 </NewsletterWrapper>
             </Article>
         </PageWrapper>

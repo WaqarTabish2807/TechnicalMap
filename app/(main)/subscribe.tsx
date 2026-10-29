@@ -27,18 +27,16 @@ export const subscribe = async (email: string) => {
   if (!isValidEmail) {
     return { error: "Please enter a valid email address" };
   }
-  const response = await fetch(
-    `/api/subscribe?email=${encodeURIComponent(email)}`,
-    {
-      method: "POST",
-    },
-  );
+  const response = await fetch("/api/subscribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, source: window.location.href }),
+  });
   if (!response.ok) {
-    const body = await response.json();
-    if (body.code === "email_already_exists" || body.code === "loops_error") {
+    const body = await response.json().catch(() => ({}));
+    if (body.code === "email_already_exists") {
       return {
-        error:
-          "You're already subscribed to the waitlist! Check your inbox for a confirmation email.",
+        error: "You're already on the list. See you in your inbox.",
       };
     }
     return { error: "Something went wrong. Please try again." };
@@ -168,7 +166,7 @@ function SubscribeForm({ onCancel }: { onCancel: () => void }) {
       </form>
       {success && (
         <p className="text-sm text-gray11 bg-gray3 p-4 border border-gray8 rounded-xl -mt-6 pt-10">
-          Thanks for subscribing! Check your inbox for a confirmation email.
+          Almost there. Check your inbox and click the confirm link.
         </p>
       )}
       {error && (

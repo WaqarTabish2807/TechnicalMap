@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { posts, XIcon } from "./posts";
 import { usePathname } from "next/navigation";
-import { FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
+import { FaGithub, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
+import { LINKS } from "~/lib/config";
 
 export function PostsFooter() {
   const pathname = usePathname();
@@ -58,31 +59,30 @@ export function PostsFooter() {
         </span>
       </ul>
       <div className="mt-8 flex justify-center gap-6 text-gray11">
-        <a
-          href="https://github.com/WaqarTabish2807"
-          target="_blank"
-          rel="noreferrer"
-          className="hover:text-gray12 transition-colors"
-        >
-          <FaGithub size={24} />
-        </a>
-        <a
-          href="https://x.com/iamwaqs"
-          target="_blank"
-          rel="noreferrer"
-          className="hover:text-gray12 transition-colors"
-        >
-          <FaTwitter size={24} />
-        </a>
-        <a
-          href="https://www.linkedin.com/in/md-waqar-tabish/"
-          target="_blank"
-          rel="noreferrer"
-          className="hover:text-gray12 transition-colors"
-        >
-          <FaLinkedin size={24} />
-        </a>
+        {[
+          { href: LINKS.instagram, label: "Instagram", Icon: FaInstagram },
+          { href: LINKS.linkedin, label: "LinkedIn", Icon: FaLinkedin },
+          { href: LINKS.x, label: "X", Icon: FaTwitter },
+          { href: LINKS.github, label: "GitHub", Icon: FaGithub },
+        ].map(({ href, label, Icon }) => (
+          <a
+            key={label}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={label}
+            className="hover:text-gray12 transition-colors"
+          >
+            <Icon size={24} />
+          </a>
+        ))}
       </div>
+      <p className="mt-4 text-center text-sm text-gray11">
+        Building an AI or DevTool product?{" "}
+        <Link className="underline underline-offset-2" href="/work">
+          Work with me
+        </Link>
+      </p>
     </footer>
   );
 }

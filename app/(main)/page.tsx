@@ -5,7 +5,8 @@ import Balancer from "react-wrap-balancer";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import clsx from "clsx";
-import { FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
+import { FaGithub, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
+import { LINKS } from "~/lib/config";
 import { SubscribeButton } from "./subscribe";
 import { posts, XIcon } from "./posts";
 import { ClientNameTray } from "../../components/ClientNameTray";
@@ -124,43 +125,41 @@ export default function HomePage() {
         <div className="md:flex lg:block lg:space-y-8 space-y-6 md:space-y-0 items-center justify-between">
           <p className="leading-relaxed">
             <Balancer>
-              Interactive Posts On How to Write A Technical Blog by{" "}
-              <a
-                className="underline underline-offset-2"
-                href="https://www.linkedin.com/in/md-waqar-tabish/"
-              >
+              Technical deep-dives and UGC for AI &amp; DevTool startups. How
+              complex products get explained, and why some explanations convert.
+              By{" "}
+              <Link className="underline underline-offset-2" href="/work">
                 Waqar Tabish.
-              </a>
+              </Link>
             </Balancer>
           </p>
-          <SubscribeButton />
+          <div className="flex items-center gap-3">
+            <SubscribeButton />
+            <Link
+              className="text-sm font-medium rounded-lg border border-gray8 px-2 py-1.5 w-fit hover:bg-gray5"
+              href="/work"
+            >
+              Work with me
+            </Link>
+          </div>
         </div>
         <footer className="mt-auto flex justify-between items-end text-gray11">
           <div className="flex items-center gap-3">
-            <a
-              href="https://github.com/WaqarTabish2807"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <FaGithub />
+            <a href={LINKS.instagram} target="_blank" rel="noreferrer" aria-label="Instagram">
+              <FaInstagram />
             </a>
-            <a
-              href="https://x.com/iamwaqs"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={LINKS.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn">
+              <FaLinkedin />
+            </a>
+            <a href={LINKS.x} target="_blank" rel="noreferrer" aria-label="X">
               <FaTwitter />
             </a>
-            <a
-              href="https://www.linkedin.com/in/md-waqar-tabish/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <FaLinkedin />
+            <a href={LINKS.github} target="_blank" rel="noreferrer" aria-label="GitHub">
+              <FaGithub />
             </a>
           </div>
           <p className="text-xs text-gray10 font-mono">
-            © 2021 - {new Date().getFullYear()}
+            © {new Date().getFullYear()}
           </p>
         </footer>
       </aside>

@@ -4,11 +4,11 @@ import { SubscribeInput } from "./SubscribeInput";
 export function NewsletterForm() {
   return (
     <Wrapper>
-      <h4>Newsletter</h4>
+      <h4>The Technical Map, weekly</h4>
       <p>
-        Sign up for my newsletter to get new content sent straight to your
-        inbox! You'll also receive updates on whatever I'm working on and
-        anything I find interesting.
+        One email a week. What I noticed about how AI and DevTool products get
+        explained: the technical deep-dives, the UGC that actually converts,
+        and why. No fluff. Unsubscribe anytime.
       </p>
       <SubscribeInput />
     </Wrapper>

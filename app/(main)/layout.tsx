@@ -1,35 +1,28 @@
 import { BackgroundStripes } from "~/components/stripe-pattern";
 import type { Metadata, Viewport } from "next";
+import { BASE_URL, SITE } from "~/lib/config";
 
 export const viewport: Viewport = {
   themeColor: "#ededed",
 };
 
 export const metadata: Metadata = {
-  title: "The Technical Map",
-  description:
-    "An interactive blog on computer science and web development, by Waqar Tabish.",
-  authors: [
-    {
-      name: "Waqar Tabish",
-      url: "https://x.com/iamwaqs",
-    },
-  ],
+  description: SITE.description,
+  authors: [{ name: SITE.author, url: `${BASE_URL}/work` }],
   twitter: {
     card: "summary_large_image",
-    title: "The Technical Map",
-    description:
-      "An interactive blog on computer science and web development, by Waqar Tabish.",
-    creator: "@iamwaqs",
+    title: SITE.name,
+    description: SITE.description,
+    creator: SITE.twitter,
   },
   openGraph: {
-    title: "The Technical Map",
-    description:
-      "An interactive blog on computer science and web development, by Waqar Tabish.",
-    url: "https://nan.fyi",
-    siteName: "The Technical Map",
+    title: SITE.name,
+    description: SITE.description,
+    url: BASE_URL,
+    siteName: SITE.name,
+    type: "website",
   },
-  metadataBase: new URL("https://nan.fyi"),
+  metadataBase: new URL(BASE_URL),
 };
 
 export default function MainLayout({
