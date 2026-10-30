@@ -134,10 +134,10 @@ export default function HomePage() {
               </Link>
             </Balancer>
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <SubscribeButton />
             <Link
-              className="text-sm font-medium rounded-lg border border-gray8 px-2 py-1.5 w-fit hover:bg-gray5"
+              className="text-sm font-medium rounded-lg border border-gray8 px-2 py-1.5 w-fit whitespace-nowrap hover:bg-gray5"
               href="/work"
             >
               Work with me

@@ -73,7 +73,7 @@ function SubscribeForm({ onCancel }: { onCancel: () => void }) {
   }, []);
 
   return (
-    <div>
+    <div className="w-full">
       <form
         className="p-3 pl-4 pb-4 bg-gray5 border border-gray8 rounded-xl shadow-inner flex flex-col gap-3 relative"
         onSubmit={handleSubmit}
