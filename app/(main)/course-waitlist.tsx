@@ -50,7 +50,7 @@ export function CourseWaitlist() {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
-        <span className="flex flex-col lg:flex-row lg:gap-4 lg:items-center gap-2">
+        <span className="flex flex-col gap-1 min-w-0">
           <span className="flex items-center gap-2 shrink-0">
             <span className="font-medium">The Complete Technical Writing Course</span>
             <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-wider text-blue11 bg-blue3 border border-blue6 rounded uppercase shrink-0">
@@ -62,7 +62,14 @@ export function CourseWaitlist() {
             want to read.
           </span>
         </span>
-        <span className="ml-auto shrink-0 text-sm font-medium whitespace-nowrap">
+        <span
+          className={clsx(
+            "ml-auto shrink-0 text-sm font-medium whitespace-nowrap rounded-lg px-3 py-1.5 transition-colors",
+            open
+              ? "border border-gray8 text-gray11 hover:bg-gray5"
+              : "bg-gray12 text-gray1 hover:bg-gray11",
+          )}
+        >
           {open ? "Close" : "Join waitlist →"}
         </span>
       </button>

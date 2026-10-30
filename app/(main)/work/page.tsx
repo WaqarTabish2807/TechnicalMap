@@ -5,6 +5,7 @@ import { FaInstagram, FaLinkedin } from "react-icons/fa";
 import { posts, XIcon } from "../posts";
 import { PostsFooter } from "../footer";
 import { BASE_URL, LINKS, SITE } from "~/lib/config";
+import { PERSON_ID, SERVICE_ID, jsonLd } from "~/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "Work with me",
@@ -52,6 +53,34 @@ const packages = [
   },
 ];
 
+// Shown on the page and mirrored in FAQPage schema, so answer engines can quote it.
+const faqs = [
+  [
+    "What does a content partner for AI and DevTool startups do?",
+    "I take one product story and ship it in two formats: a technical deep-dive that developers read and trust, and short-form UGC videos that show the product solving a real problem. You get the article for search and credibility, and the videos for social and paid ads.",
+  ],
+  [
+    "What is tech UGC?",
+    "User-generated-style video for software. Instead of holding up a product, it combines face cam with screen recording and shows the problem being solved, not a feature tour. It's built to run as an organic post or a paid ad.",
+  ],
+  [
+    "How much does it cost?",
+    "It depends on scope: one article, a set of videos, or both. Book a 30-minute call and you get a quote within 48 hours.",
+  ],
+  [
+    "How long does a project take?",
+    "About a week from the agreed angle to the first draft of the article and scripts. One round of edits, then it goes live.",
+  ],
+  [
+    "Do you make UGC for physical products?",
+    "No. Only tech, SaaS and AI products, because that's where screen demos and technical understanding matter most.",
+  ],
+  [
+    "What do you need from us to start?",
+    "A 30-minute brief call, access to the product, and the one problem you most want people to understand. I handle the angle, writing, filming and editing.",
+  ],
+];
+
 const steps = [
   ["Brief", "A 30-minute call. What the product does, who buys it, what they're stuck on."],
   ["Angle", "I send 3 angles and hooks. You pick one. Nothing gets written before this."],
@@ -65,8 +94,41 @@ export default function WorkPage() {
   ) as string[];
   const clientPosts = posts.filter((post) => post.client);
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ProfessionalService",
+        "@id": SERVICE_ID,
+        name: `${SITE.author}: ${SITE.tagline}`,
+        url: `${BASE_URL}/work`,
+        description: metadata.description,
+        provider: { "@id": PERSON_ID },
+        areaServed: "Worldwide",
+        serviceType: ["Technical writing", "UGC video production", "Developer content marketing"],
+        hasOfferCatalog: {
+          "@type": "OfferCatalog",
+          name: "Packages",
+          itemListElement: packages.map((pkg) => ({
+            "@type": "Offer",
+            itemOffered: { "@type": "Service", name: pkg.name, description: pkg.for },
+          })),
+        },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: faqs.map(([question, answer]) => ({
+          "@type": "Question",
+          name: question,
+          acceptedAnswer: { "@type": "Answer", text: answer },
+        })),
+      },
+    ],
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(schema)} />
       <div className="bg-gray4 md:border-x border-b border-gray8 relative">
         <header className="px-6 md:px-8 lg:px-10 py-3 border-b border-borderSoft flex justify-between items-center text-gray11">
           <h2 className="font-serif text-2xl translate-y-0.5">
@@ -201,6 +263,18 @@ export default function WorkPage() {
             </ul>
           </section>
         )}
+
+        <section className="p-6 md:p-10 lg:p-16 border-b border-gray7 border-dashed">
+          <h2 className="font-serif text-4xl mb-8">Questions</h2>
+          <dl className="grid md:grid-cols-2 gap-x-10 gap-y-8 max-w-[1100px]">
+            {faqs.map(([question, answer]) => (
+              <div key={question}>
+                <dt className="font-medium mb-2">{question}</dt>
+                <dd className="text-gray11 leading-relaxed">{answer}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
 
         <section className="p-6 md:p-10 lg:p-16">
           <h2 className="font-serif text-4xl mb-4">Got a product that&apos;s hard to explain?</h2>

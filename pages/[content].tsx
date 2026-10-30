@@ -9,6 +9,7 @@ import Image from "next/image";
 
 import { getAllPosts, getPost, type Post } from "~/lib/content.server";
 import { BASE_URL, SITE } from "~/lib/config";
+import { PERSON_ID, WEBSITE_ID, personSchema } from "~/lib/structured-data";
 import { darkTheme, styled } from "~/stitches.config";
 
 import { Heading, Subheading } from "~/components/Heading";
@@ -114,8 +115,10 @@ export default function PostPage({ content }: { content: Post }) {
                             url,
                             datePublished: frontmatter.publishedAt,
                             dateModified: frontmatter.editedAt,
-                            author: { "@type": "Person", name: SITE.author, url: `${BASE_URL}/work` },
-                            publisher: { "@type": "Organization", name: SITE.name, url: BASE_URL },
+                            author: personSchema,
+                            publisher: { "@id": PERSON_ID },
+                            isPartOf: { "@type": "WebSite", "@id": WEBSITE_ID, name: SITE.name, url: BASE_URL },
+                            ...(frontmatter.client ? { sponsor: { "@type": "Organization", name: frontmatter.client } } : {}),
                         }),
                     }}
                 />
