@@ -20,7 +20,6 @@ import { Content } from "~/components/Content";
 // import { ThemeToggle } from "~/components/ThemeToggle";
 import { ClientNameTray } from "~/components/ClientNameTray";
 import { WorkWithMe } from "~/components/WorkWithMe";
-import { Comments } from "~/components/Comments";
 
 export async function getStaticProps(context: GetStaticPropsContext) {
     return {
@@ -51,6 +50,8 @@ export default function PostPage({ content }: { content: Post }) {
     );
     const { frontmatter, headings, slug } = content;
     const url = `${BASE_URL}/${slug}`;
+    // seoTitle (optional) is the search/social title; the on-page H1 stays `title`.
+    const seoTitle: string = frontmatter.seoTitle ?? frontmatter.title;
     const ogImage = `${BASE_URL}/og?${new URLSearchParams({
         title: frontmatter.title,
         ...(frontmatter.client ? { client: frontmatter.client } : {}),
@@ -81,13 +82,13 @@ export default function PostPage({ content }: { content: Post }) {
     return (
         <PageWrapper>
             <Head>
-                <title>{`${frontmatter.title} | ${SITE.name}`}</title>
+                <title>{frontmatter.seoTitle ?? `${frontmatter.title} | ${SITE.name}`}</title>
                 <meta name="description" content={frontmatter.description} />
                 <meta name="author" content={SITE.author} />
                 <link rel="canonical" href={url} />
                 <meta property="og:type" content="article" />
                 <meta property="og:site_name" content={SITE.name} />
-                <meta property="og:title" content={frontmatter.title} />
+                <meta property="og:title" content={seoTitle} />
                 <meta property="og:description" content={frontmatter.description} />
                 <meta property="og:image" content={ogImage} />
                 <meta property="og:image:width" content="1200" />
@@ -97,7 +98,7 @@ export default function PostPage({ content }: { content: Post }) {
                 <meta property="article:modified_time" content={frontmatter.editedAt} />
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:creator" content={SITE.twitter} />
-                <meta name="twitter:title" content={frontmatter.title} />
+                <meta name="twitter:title" content={seoTitle} />
                 <meta name="twitter:description" content={frontmatter.description} />
                 <meta name="twitter:image" content={ogImage} />
                 <link rel="alternate" type="application/rss+xml" title={SITE.name} href={`${BASE_URL}/rss.xml`} />
@@ -159,7 +160,6 @@ export default function PostPage({ content }: { content: Post }) {
                 <NewsletterWrapper>
                     <WorkWithMe client={frontmatter.client} />
                     <NewsletterForm />
-                    <Comments slug={slug} />
                 </NewsletterWrapper>
             </Article>
         </PageWrapper>

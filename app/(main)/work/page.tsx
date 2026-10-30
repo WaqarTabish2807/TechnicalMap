@@ -53,7 +53,7 @@ const packages = [
 ];
 
 const steps = [
-  ["Brief", "A 20-minute call. What the product does, who buys it, what they're stuck on."],
+  ["Brief", "A 30-minute call. What the product does, who buys it, what they're stuck on."],
   ["Angle", "I send 3 angles and hooks. You pick one. Nothing gets written before this."],
   ["Draft", "Article and scripts within a week. Code tested, screens recorded."],
   ["Ship", "One round of edits, then it goes live on your channels and mine."],
@@ -101,7 +101,7 @@ export default function WorkPage() {
               target="_blank"
               rel="noreferrer"
             >
-              Send me a brief
+              Book a 30-min brief call
             </a>
             <a
               className="text-sm font-medium rounded-lg border border-gray8 px-3 py-2 hover:bg-gray5"
@@ -164,7 +164,7 @@ export default function WorkPage() {
             </span>
           </ul>
           <p className="mt-4 text-sm text-gray11">
-            Pricing depends on scope. Send a brief and you get a quote within 48 hours.
+            Pricing depends on scope. Book a call and you get a quote within 48 hours.
           </p>
         </section>
 
@@ -205,10 +205,18 @@ export default function WorkPage() {
         <section className="p-6 md:p-10 lg:p-16">
           <h2 className="font-serif text-4xl mb-4">Got a product that&apos;s hard to explain?</h2>
           <p className="text-gray11 mb-6 max-w-[55ch]">
-            That&apos;s the kind I like. Send a line about what you&apos;re building.
+            That&apos;s the kind I like. Book 30 minutes and tell me what you&apos;re building.
           </p>
-          <div className="flex gap-4 text-gray11">
-            <a className="flex items-center gap-2 hover:text-gray12" href={LINKS.contact} target="_blank" rel="noreferrer">
+          <div className="flex flex-wrap items-center gap-4 text-gray11">
+            <a
+              className="text-sm font-medium rounded-lg bg-gray12 text-gray1 px-3 py-2"
+              href={LINKS.contact}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Book a 30-min call
+            </a>
+            <a className="flex items-center gap-2 hover:text-gray12" href={LINKS.instagramDM} target="_blank" rel="noreferrer">
               <FaInstagram /> DM @waqar.ugc
             </a>
             <a className="flex items-center gap-2 hover:text-gray12" href={LINKS.linkedin} target="_blank" rel="noreferrer">

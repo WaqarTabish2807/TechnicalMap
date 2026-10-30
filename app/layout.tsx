@@ -25,6 +25,10 @@ export const metadata: Metadata = {
   alternates: {
     types: { "application/rss+xml": `${BASE_URL}/rss.xml` },
   },
+  // Google Search Console "HTML tag" verification; set the token in Vercel.
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 const handwriting = Shantell_Sans({

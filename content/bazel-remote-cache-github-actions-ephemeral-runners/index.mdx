@@ -1,7 +1,8 @@
 ---
 title: "Bazel Remote Cache on GitHub Actions: Why Ephemeral Runners Hurt You and How to Fix It"
+seoTitle: "Bazel Remote Cache on GitHub Actions: Fix Slow CI Builds"
 blurb: "Every GitHub Actions job starts with an empty disk cache, forcing Bazel onto high-latency network calls. Learn why ephemeral runners hurt your build times and how to resolve it with persistent Cache Volumes."
-description: "An end-to-end technical guide explaining how Bazel's two-layer caching behaves on ephemeral GitHub-hosted runners, why network caching suffers from round-trip overhead, and how Namespace's persistent NVMe Cache Volumes solve it."
+description: "Ephemeral GitHub Actions runners start with an empty disk, so Bazel falls back to slow network cache calls. See why, and how persistent cache volumes fix it."
 publishedAt: "2026-05-24"
 editedAt: "2026-05-24"
 client: Namespace

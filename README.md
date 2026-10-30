@@ -20,7 +20,7 @@ Set these in Vercel → Project → Settings → Environment Variables (and in `
 | --- | --- |
 | `POSTGRES_URL` | Neon Postgres, where subscriber emails are stored. Set automatically when Neon is added from Vercel's Storage tab. Create the table with `db/schema.sql`. |
 | `KIT_API_KEY`, `KIT_FORM_ID` | Optional. Mirrors each signup into Kit, which sends the weekly newsletter. |
-| `NEXT_PUBLIC_GISCUS_REPO_ID`, `NEXT_PUBLIC_GISCUS_CATEGORY_ID` | Comments on posts (Giscus / GitHub Discussions). Get them from giscus.app. |
+| `GOOGLE_SITE_VERIFICATION` | Optional. The token from Google Search Console's "HTML tag" verification method. |
 
 ## SEO
 

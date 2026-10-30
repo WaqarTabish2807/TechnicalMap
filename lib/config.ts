@@ -15,7 +15,8 @@ export const LINKS = {
   linkedin: "https://www.linkedin.com/in/md-waqar-tabish/",
   github: "https://github.com/WaqarTabish2807",
   x: "https://x.com/iamwaqs",
-  // Where "Work with me" buttons point. Opens an Instagram DM to @waqar.ugc.
-  // Swap for a Cal.com / Calendly link once you have one.
-  contact: "https://ig.me/m/waqar.ugc",
+  // Where "Work with me" buttons point: a 30-minute brief call.
+  contact: "https://cal.com/waqar-tabish-qv6xvy/30min",
+  // Opens an Instagram DM to @waqar.ugc.
+  instagramDM: "https://ig.me/m/waqar.ugc",
 };

@@ -82,6 +82,10 @@ export function PostsFooter() {
         <Link className="underline underline-offset-2" href="/work">
           Work with me
         </Link>
+        {" · "}
+        <Link className="underline underline-offset-2" href="/newsletter">
+          Newsletter
+        </Link>
       </p>
     </footer>
   );
