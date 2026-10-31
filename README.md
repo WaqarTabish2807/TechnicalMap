@@ -107,6 +107,14 @@ This site started as a fork of [NotANumber](https://github.com/nandanmen/NotANum
 
 Everything else, the posts in `content/`, the newsletter and the /work page, is mine.
 
+## License
+
+It's split three ways, and [LICENSE](LICENSE) has the details:
+
+- **Code from NotANumber** belongs to its author. It has no open-source license, so ask them before reusing it.
+- **My writing** (the posts and site copy) is all rights reserved. Short quotes with a link back are fine.
+- **Code I wrote** for this site (the newsletter signup, /work, the SEO setup and a few components) is MIT. Take it.
+
 ## Say hi
 
 If you're building an AI or DevTool product that's hard to explain, [book 30 minutes](https://cal.com/waqar-tabish-qv6xvy/30min) or find me on [LinkedIn](https://www.linkedin.com/in/md-waqar-tabish/).

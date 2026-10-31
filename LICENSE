@@ -1,6 +1,45 @@
-MIT License
+This repository contains three kinds of work, under three different terms.
+
+
+1. Code from NotANumber
+-----------------------
+
+This site is a fork of NotANumber by Nanda Syahrasyad:
+https://github.com/nandanmen/NotANumber
+
+That project is published without an open-source license, so its author keeps
+all rights to it. This covers the original layout, styles, fonts setup,
+interactive components, the app/svg-paths/ guide and anything else that came
+from that repository, including the parts I've modified.
+
+None of the terms below apply to that code. If you want to reuse it, ask its
+author.
+
+
+2. Writing
+----------
+
+Copyright (c) 2026 Md Waqar Tabish. All rights reserved.
+
+The posts in content/ and the site copy (the homepage, /work and /newsletter
+text) are mine. Please don't republish them. Quoting a short excerpt with a
+link back is fine. Posts written for clients (marked with a `client` field)
+may also be subject to that client's rights.
+
+
+3. My code
+----------
 
 Copyright (c) 2026 Md Waqar Tabish
+
+The code I wrote for this site is available under the MIT License. That
+includes the newsletter and waitlist signup (app/api/subscribe, lib/db.ts,
+lib/newsletter.ts, db/), the /work and /newsletter pages, the generated
+social images (app/og, lib/og-card.tsx, app/apple-icon.tsx), the SEO and
+structured data files (app/sitemap.ts, app/robots.ts, app/rss.xml,
+app/llms.txt, lib/structured-data.ts), components/ClientNameTray.tsx,
+components/WorkWithMe.tsx, components/perfect-title/ and
+app/(main)/course-waitlist.tsx.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
