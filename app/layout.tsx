@@ -1,10 +1,3 @@
-import {
-  Kalam,
-  Fira_Code,
-  JetBrains_Mono,
-  Source_Code_Pro,
-  Shantell_Sans,
-} from "next/font/google";
 import localFont from "next/font/local";
 import { clsx } from "clsx";
 import "./styles.css";
@@ -29,10 +22,11 @@ export const metadata: Metadata = {
   verification: { google: "wC0UxSRE9fwomxsDlODhGbdpKnF1fN0_3atgH8ir6xE" },
 };
 
-const handwriting = Shantell_Sans({
-  weight: ["500"],
+// Google fonts are self-hosted (latin subset, OFL) so builds never depend on
+// fonts.googleapis.com, whose newer URL format breaks Turbopack's next/font.
+const handwriting = localFont({
+  src: [{ path: "./fonts/shantell-sans/medium.woff2", weight: "500", style: "normal" }],
   variable: "--font-handwriting",
-  subsets: ["latin"],
 });
 
 const sans = localFont({
@@ -92,10 +86,9 @@ const sans = localFont({
   variable: "--font-mono",
 }); */
 
-const mono = Source_Code_Pro({
-  weight: ["400", "500", "600", "700"],
+const mono = localFont({
+  src: [{ path: "./fonts/source-code-pro/variable.woff2", weight: "400 700", style: "normal" }],
   variable: "--font-mono",
-  subsets: ["latin"],
 });
 
 const serif = localFont({
