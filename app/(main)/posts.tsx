@@ -4,6 +4,7 @@ import coldEmailArt from "../_images/cold-email-art.png";
 import openClawArt from "../_images/open-claw-art.png";
 import perfectTitleArt from "../_images/perfect-title-art.png";
 import composioLinearAgentArt from "../_images/composio-linear-agent-art.png";
+import hnLaunchArt from "../_images/hn-launch-art.png";
 
 export function XIcon() {
   return (
@@ -24,6 +25,15 @@ export function XIcon() {
 }
 
 export const posts = [
+  {
+    slug: "launch-on-hacker-news",
+    title: "How to Launch on Hacker News, Based on 583 Comments",
+    description:
+      "I hand-coded every top-level comment on 30 AI and DevTool launches from the last two weeks. Here's what Hacker News asks before it tries your tool.",
+    shortDescription: "Hand-coded data from 583 HN comments on 30 AI and DevTool launches: comparison questions (75) and support questions (58) far outnumbered pricing (14). Includes a free CSV dataset.",
+    editedAt: "2026-11-15",
+    image: hnLaunchArt,
+  },
   {
     slug: "building-github-pr-review-agent-composio-linear-sync",
     title: "Building a GitHub PR Review Agent with Composio and Linear Sync",

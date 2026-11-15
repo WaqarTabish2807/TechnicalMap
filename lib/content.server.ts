@@ -15,11 +15,14 @@ export type Heading = {
   text: string;
 };
 
+export type Faq = { question: string; answer: string };
+
 export type Post = {
   code: string;
   frontmatter: Record<string, any>;
   slug: string;
   headings: Heading[];
+  faqs: Faq[];
 };
 
 export type PostMetadata = {
@@ -75,7 +78,31 @@ export const getPost = async (slug: string): Promise<Post> => {
       return options;
     },
   });
-  return { ...mdxOut, slug, headings: getHeadings(mdxSource) };
+  return { ...mdxOut, slug, headings: getHeadings(mdxSource), faqs: getFaqs(mdxSource) };
+};
+
+/**
+ * Pulls question/answer pairs out of a "## FAQs" section (each question an
+ * h3, the answer the text under it) so the post page can emit FAQPage schema
+ * that matches what readers see.
+ */
+const getFaqs = (content: string): Faq[] => {
+  const match = content.match(/\n## FAQs?\s*\n([\s\S]*?)(?=\n## |$)/);
+  if (!match) return [];
+  return ("\n" + match[1])
+    .split(/\n### /)
+    .slice(1)
+    .map((block) => {
+      const [question, ...rest] = block.split("\n");
+      const answer = rest
+        .join(" ")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/[*_`]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return { question: question.trim(), answer };
+    })
+    .filter((faq) => faq.question && faq.answer);
 };
 
 const getHeadings = (content: string): Heading[] => {

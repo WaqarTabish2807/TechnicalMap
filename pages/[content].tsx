@@ -122,6 +122,45 @@ export default function PostPage({ content }: { content: Post }) {
                         }),
                     }}
                 />
+                {content.faqs.length > 0 && (
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{
+                            __html: JSON.stringify({
+                                "@context": "https://schema.org",
+                                "@type": "FAQPage",
+                                mainEntity: content.faqs.map((faq) => ({
+                                    "@type": "Question",
+                                    name: faq.question,
+                                    acceptedAnswer: { "@type": "Answer", text: faq.answer },
+                                })),
+                            }),
+                        }}
+                    />
+                )}
+                {frontmatter.dataset && (
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{
+                            __html: JSON.stringify({
+                                "@context": "https://schema.org",
+                                "@type": "Dataset",
+                                name: frontmatter.dataset.name,
+                                description: frontmatter.dataset.description,
+                                url,
+                                creator: { "@id": PERSON_ID },
+                                datePublished: frontmatter.publishedAt,
+                                license: "https://creativecommons.org/licenses/by/4.0/",
+                                isAccessibleForFree: true,
+                                distribution: {
+                                    "@type": "DataDownload",
+                                    encodingFormat: "text/csv",
+                                    contentUrl: `${BASE_URL}${frontmatter.dataset.path}`,
+                                },
+                            }),
+                        }}
+                    />
+                )}
             </Head>
             <MobileBottomBar headings={headings} />
             <Nav>
@@ -158,6 +197,12 @@ export default function PostPage({ content }: { content: Post }) {
                         ol: OrderedList as any,
                         a: Link as any,
                         TitleTester: TitleTester as any,
+                        LaunchChecklist: LaunchChecklist as any,
+                        ObjectionExplorer: ObjectionExplorer as any,
+                        LaunchHeatmap: LaunchHeatmap as any,
+                        ComparisonBuilder: ComparisonBuilder as any,
+                        ScrollJackDemo: ScrollJackDemo as any,
+                        ReadmeFixer: ReadmeFixer as any,
                     }}
                 />
                 <NewsletterWrapper>
@@ -173,6 +218,32 @@ const TitleTester = dynamic(() =>
     import("~/components/perfect-title/TitleTester").then(
         (mod) => mod.TitleTester
     )
+);
+
+const LaunchChecklist = dynamic(() =>
+    import("~/components/hn-launch/LaunchChecklist").then(
+        (mod) => mod.LaunchChecklist
+    )
+);
+
+const ObjectionExplorer = dynamic(() =>
+    import("~/components/hn-launch/ObjectionExplorer").then((mod) => mod.ObjectionExplorer)
+);
+
+const LaunchHeatmap = dynamic(() =>
+    import("~/components/hn-launch/LaunchHeatmap").then((mod) => mod.LaunchHeatmap)
+);
+
+const ComparisonBuilder = dynamic(() =>
+    import("~/components/hn-launch/ComparisonBuilder").then((mod) => mod.ComparisonBuilder)
+);
+
+const ScrollJackDemo = dynamic(() =>
+    import("~/components/hn-launch/ScrollJackDemo").then((mod) => mod.ScrollJackDemo)
+);
+
+const ReadmeFixer = dynamic(() =>
+    import("~/components/hn-launch/ReadmeFixer").then((mod) => mod.ReadmeFixer)
 );
 
 const NewsletterWrapper = styled("footer", {

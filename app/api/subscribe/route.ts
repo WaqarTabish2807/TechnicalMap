@@ -13,7 +13,7 @@ import { sql } from "~/lib/db";
 
 // Extra lists someone can join on top of the newsletter. Each one becomes a
 // tag in Neon and a tag of the same name in Kit.
-const ALLOWED_TAGS = ["course-waitlist"];
+const ALLOWED_TAGS = ["course-waitlist", "hn-launch-checklist"];
 
 const KIT_API = "https://api.kit.com/v4";
 

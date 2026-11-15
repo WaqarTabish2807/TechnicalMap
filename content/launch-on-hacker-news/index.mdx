@@ -1,0 +1,168 @@
+---
+title: "How to Launch on Hacker News, Based on 583 Comments"
+seoTitle: "How to Launch on Hacker News: What 583 Comments Asked"
+blurb: "I hand-coded every top-level comment on 30 AI and DevTool launches from the last two weeks. Here's what Hacker News asks before it tries your tool."
+description: "583 top-level comments on 30 Show HN and Launch HN posts, hand-coded. The objections developers raise most, and how to answer them in your launch post."
+publishedAt: "2026-11-15"
+editedAt: "2026-11-15"
+dataset:
+  name: "Hacker News launch objections, Oct 29 to Nov 13, 2026"
+  description: "583 top-level comments on 30 AI and developer tool Show HN and Launch HN posts, each hand-labelled with the objection it raises: comparison, support, unclear, proof, trust, pricing or name clash."
+  path: "/data/hn-launch-objections-2026-11.csv"
+---
+
+**TL;DR:** Across 30 AI and DevTool launches, comparison and compatibility questions outnumbered pricing questions nine to one. Answer them in the post, or answer them in the thread all day.
+
+## What 30 Developer Tool Launches Got Asked in Two Weeks
+
+Between October 29 and November 13, 2026, 30 AI and developer tool launches on Hacker News collected 583 top-level comments, and 249 of them (43%) raised at least one objection the founders then had to answer by hand. Not one of those objections was rare. Every category I'll walk through showed up in at least four threads, and the top two showed up in twenty.
+
+Show HN is still the place where a developer tool meets its harshest early users, and Launch HN is the same room with a YC badge on the door. The advice on getting there is settled by now: post on a weekday morning, keep the title plain, make the thing tryable without a signup, and reply to everyone. The [Show HN guidelines](https://news.ycombinator.com/showhn.html) say most of that in a few paragraphs. What none of the playbooks I read tell you is what people will ask in the first hour, so I counted.
+
+The pattern I kept running into was a founder who'd written a pitch and got an FAQ instead. On [Rivet's launch](https://news.ycombinator.com/item?id=50381687), a commenter who works in the same space [said plainly that they couldn't tell what the company did](https://news.ycombinator.com/item?id=50386496) and asked for the website to lead with the problem. That comment is one of 47 like it. The landing page, the README and the launch post were written to persuade, and the thread needed them to answer.
+
+Here's the method, so you can check me. I took every Show HN and Launch HN post from those 15 days with ten or more comments, kept the 30 that are AI products or developer tools (no games, no weekend toys), and read all 583 top-level comments. Each one got zero or more of seven labels. Replies under top-level comments aren't counted, because they're mostly the founder answering. The [coded dataset is a CSV](/data/hn-launch-objections-2026-11.csv) with a link to every comment, and it's free to reuse under CC BY 4.0.
+
+<ObjectionExplorer />
+
+## The Comparison Question Every Show HN Launch Gets
+
+Founders worry about pricing pushback and get comparison pushback instead, at more than five times the rate. And the comparison almost never arrives as an abstract "what's your moat"; it arrives with a link to the specific tool the commenter already uses.
+
+### Commenters Name a Competitor Before You Do
+
+Of the 75 comparison comments, most named a product. OmniDiff, a Git diff tool, got asked about [delta](https://news.ycombinator.com/item?id=50325592) and [difftastic](https://news.ycombinator.com/item?id=50334517) within the first hour. Waymark, a workflow engine, got [one commenter summing it up as Temporal without the replay](https://news.ycombinator.com/item?id=50401922) and [another asking how it differs from Temporal at all](https://news.ycombinator.com/item?id=50404983). Kino AI, an AI video editor, got compared to Cardboard and ArtCraft.
+
+The record belongs to Yogurt, an open-source meeting notes app pitched as an alternative to Granola. Twelve of its 47 top-level comments were comparisons, and almost none of them were about Granola. They were about OpenWhispr, Muesli, Meetily and seven other tools. Once the first commenter names an alternative, the thread becomes a comparison table that someone else is writing.
+
+Here's every launch in the sample. Sort by **Compare** and Yogurt jumps to the top; sort by **Proof** and it's Momentic's benchmark thread.
+
+<LaunchHeatmap />
+
+### "Why Not Just Use Claude" Is the New Comparison
+
+For AI tools, the competitor is often the frontier model itself. On Momentic's launch, an agent that tests your app for bugs, [one of the first questions](https://news.ycombinator.com/item?id=50340455) was why anyone would pay for it instead of pointing Opus 5.5 at their app through a Playwright setup on their own subscription. On Simantic, which simulates firmware for AI agents, [a firmware engineer described spending two hours having Claude and Qwen write their own multi-chip emulator](https://news.ycombinator.com/item?id=50306349), then asked what Simantic does beyond that.
+
+This version of the question is harder than "how are you different from delta," because the honest answer involves cost, time and failure rates, and those are numbers. Founders who reach for a benchmark here walk straight into the scrutiny I'll cover in the proof section. The safer answer names the specific thing a general model gets wrong in your domain, with one example someone can rerun.
+
+### Write the Comparison Into the First Paragraph
+
+tmux-restore is the cleanest case study in the sample. It saves tmux layouts and coding agent sessions across reboots, and it's built on tmux-resurrect and tmux-continuum, two plugins [one commenter said they'd used almost daily for over ten years](https://news.ycombinator.com/item?id=50402785). The founder's opening comment didn't mention either. Five top-level comments compared it to something else (resurrect, herdr, a VM with hibernation), [including a plain "what's the difference" from a resurrect user](https://news.ycombinator.com/item?id=50401658), and another pointed to a native save and restore feature proposed for tmux itself.
+
+The fix costs one sentence. Say what you built on, what you replace, and where the alternative is the better pick. "Built on tmux-resurrect; adds agent session restore; if you don't run coding agents, resurrect alone is enough" would have answered most of those comments before they were written, and the last clause buys more trust than any feature list.
+
+Try it with your own product. The presets show the pattern on three kinds of tool.
+
+<ComparisonBuilder />
+
+## Support Questions Your Launch Post Should Answer First
+
+The second-biggest category isn't skepticism at all. Commenters who asked "does it support X" were mostly interested, and they were checking whether the tool fit their stack before spending ten minutes installing it.
+
+### The Docs Page Readers Open Before the Demo
+
+On Simantic's thread, [a commenter said the list of supported models was the first thing they went looking for in the docs](https://news.ycombinator.com/item?id=50292130). DBDelve, an open-source database client, got a reply from someone who [won't drop DataGrip until a new client handles Oracle, SQL Server and Postgres](https://news.ycombinator.com/item?id=50430454). Subvocal, a pair of glasses that turns silent mouthing into text, got asked about language support by five separate people, plus a sixth about accents.
+
+None of those are hard questions. Each one is a line in a README that didn't exist, which turned an interested reader into a reply the founder had to write, and a reader who didn't wait for the reply.
+
+### Platform and Integration Asks Cluster by Product Type
+
+The asks are predictable once you sort them. Testing tools get asked about mobile and real devices: Momentic got an iOS build error, a question about simulators versus real phones, and one about what the agent sees below the UI. Agent infrastructure gets asked about auth: Pomerado, which turns websites into MCP servers, got OAuth, logins and bot detection. Workflow engines get asked about languages, so Waymark heard Java, .NET and a request to run without Postgres. Desktop apps get asked about Windows and Linux.
+
+A useful exercise before launch is to open the last three Show HN threads for tools in your category and copy every support question into a doc. You'll find your launch-day questions in there with uncomfortable accuracy.
+
+### A Compatibility Block Beats Thirty Replies
+
+Put a short "works with / doesn't yet" list in the launch post and at the top of the README. Keep it honest about what's missing, because a commenter who finds an unlisted missing feature reads it as hiding, while one who finds it listed under "not yet" reads it as a plan.
+
+The tradeoff is real: a post that admits it doesn't support Windows will lose some upvotes from Windows users. It'll also lose the thirty replies you'd otherwise spend explaining that, and those replies are where launch day goes.
+
+## When Hacker News Can't Tell What Your Product Does
+
+The 47 "I can't tell what it does" comments came from 19 threads, which means this isn't a problem a few unlucky launches had. It's the default outcome for a landing page written by people who already know what the product does.
+
+### Scroll-Driven Landing Pages Lose the Reader
+
+Subvocal's launch drew 395 comments, the most in the sample, and the product clearly interested people. It also had a landing page that told the story through scroll-triggered animation, and at least eight top-level comments complained about it. [One commenter spent 30 seconds scrolling, still didn't know what it was, and left](https://news.ycombinator.com/item?id=50340459). [Another flagged that the page wouldn't scroll with a mouse wheel in Safari at all](https://news.ycombinator.com/item?id=50340848). [At least one only realized it was a pair of glasses after reading the founders' comments](https://news.ycombinator.com/item?id=50340433).
+
+A scroll animation hides the one sentence a technical reader came for behind an interaction they didn't ask for. For a Show HN visitor, the first screen has to say what the thing is, what it runs on and what it costs, in plain words, before any motion starts.
+
+Here's what that feels like from the reader's side, with a made-up product so nobody's real page gets picked on.
+
+<ScrollJackDemo />
+
+### Jargon That Stops a Technical Reader
+
+Kairos, an open-source fraud tool, [got a whole comment objecting to the word "decisioning"](https://news.ycombinator.com/item?id=50361337). Palomino's agent workspace was pitched as an "ADE," and [a commenter had to work out that it meant agentic development environment](https://news.ycombinator.com/item?id=50310350). Pomerado's post mentioned the founders were ex-McKinsey, and [someone asked what that was supposed to tell them](https://news.ycombinator.com/item?id=50457567).
+
+Each of those words cost the founder a reply, and none of them carried information the reader wanted. If you can't explain a term in the same sentence you introduce it, replace it with the explanation. (I wrote about [the same problem in blog titles](/perfect-title): specific beats clever every time someone is deciding whether to click.)
+
+### For Show HN, the README Is the Landing Page
+
+Developer tools on Show HN often link to GitHub, not a website, so the README does the landing page's job. On Yogurt, [a commenter pointed out that the README was missing the details the founder had written in the HN post](https://news.ycombinator.com/item?id=50457460). Codemap, which maps a Go repository on one page, [got asked for a single screenshot of the output in the README](https://news.ycombinator.com/item?id=50369120). And the [Show HN guidelines](https://news.ycombinator.com/showhn.html) ask for something people can try without signups or emails, which makes a login wall in front of the demo a problem twice over.
+
+If your README needs the HN post to make sense, the README isn't finished. Copy the post's first paragraph to the top of it, add one image of the output, and make sure the first command a reader can run works without an account.
+
+Here's the same made-up README before and after those three changes. Tap the jargon in the first version to see what each phrase costs.
+
+<ReadmeFixer />
+
+> This is the part I do for a living: turning a technical product into a page and a demo a developer understands in one screen. If your launch is coming up, [here's how I work with AI and DevTool startups](/work).
+
+## Proof, Trust and Pricing Objections in Developer Tool Launches
+
+The smaller categories behaved differently from the big three. Comparison and support questions came from curious people; proof, trust and pricing questions came from people who'd already decided the tool was interesting and were looking for a reason not to adopt it.
+
+### Vendor Benchmarks Get Audited in the Thread
+
+Momentic shipped a benchmark comparing its agent to general coding agents on precision, recall and cost per bug found. Eleven of its 44 top-level comments asked for proof, and most of them went after that benchmark: how the bugs were labelled, who built the test set, why cost per bug moved the way it did, and whether precision and recall were even the right numbers for a tester who mostly cares how often the tool says "pass" on a broken flow. [One commenter with assessment experience put it bluntly](https://news.ycombinator.com/item?id=50370994): a test built by the people selling the tool, graded by the same people, convinces nobody.
+
+You should still publish numbers, but the method has to ship with them: who labelled the data, what was excluded, and a way for someone else to run it. A benchmark without a method doesn't end the comparison question; it starts a longer one.
+
+### Self-Hosting Questions Outnumber Pricing Questions Two to One
+
+Trust objections (28 comments) ran at double the rate of pricing ones (14). Pomerado [was asked where a user's password or session cookie lives](https://news.ycombinator.com/item?id=50456425) when its agents log in to bank and insurance portals. Subvocal was asked, repeatedly, whether transcription runs on the device or in the cloud. Momentic got [a one-line dismissal of closed-source, non-self-hosted tools in 2026](https://news.ycombinator.com/item?id=50343730), followed by a link to an open-source alternative.
+
+Price came up less, and when it did it was usually about tokens: commenters on Momentic and the modern-web-guidance skills both did the math on per-run costs against their existing AI subscriptions. A launch post that says where data goes, what runs locally, and whether usage is billed on your tokens or theirs answers both categories in about three sentences.
+
+### Stating Your Limits Earns Credit
+
+Subvocal ran a natural experiment in its own thread. [One commenter said they were glad to see an honest evaluation of a roughly five percent error rate](https://news.ycombinator.com/item?id=50341091) in the demo video. [Another said they would have preordered, but the accuracy FAQ was too thin to trust](https://news.ycombinator.com/item?id=50346752). Same product, same day, and the difference between the two reactions was how much the company disclosed.
+
+Hacker News readers will find your limits whether you list them or not. Listing them first changes who gets credit for the discovery.
+
+## A Show HN Launch Checklist Built From the Comment Data
+
+Every category above maps to one line you can add to a launch post or README before you submit. The order below follows the counts, so the first boxes clear the most comments.
+
+<LaunchChecklist />
+
+### Where a Demo Video Fits
+
+On Pomerado's launch, the first top-level comment opened with seven words: "A wall of text. Just post video." It's a fair note. Of the categories in this sample, a short demo video answers three at once: what it does, how it works and whether it works, before the reader decides whether your README deserves their next two minutes.
+
+What makes a demo video work for a developer audience is its own question, with its own failure modes (too long, too polished, no terminal in sight). That's the next teardown I'm writing.
+
+## How to Launch on Hacker News When Commenters Write the Brief
+
+The 30 threads in this sample agree on more than they disagree. Readers wanted to know what the tool replaces, whether it fits their stack, what it is in one sentence, how the numbers were measured, and where their data goes, in roughly that order. Each of those has a one-line answer you can put in the post before you submit. You'll either write those lines before launch, or write them 75 times in the thread.
+
+This piece covered the comparison question and the "why not just use Claude" variant, the support questions that sort by product type, the landing pages and READMEs that hid what the product was, and the proof, trust and pricing objections that decide adoption once interest is there. The checklist above turns all seven categories into lines you can tick, and the [full coded dataset](/data/hn-launch-objections-2026-11.csv) is there if you want to check my labels against the comments.
+
+## FAQs
+
+### Can a landing page or waitlist be a Show HN?
+
+No. The [Show HN guidelines](https://news.ycombinator.com/showhn.html) list sign-up pages and landing pages as off topic, because people can't try them. Post when there's something to run, install or use, ideally without an account, and link straight to it. Hardware is the exception: a video or detailed write-up is allowed.
+
+### Is Launch HN only for Y Combinator companies?
+
+Yes. Launch HN posts are for YC companies and get scheduled through YC. Everyone else uses Show HN, which any account can submit. The comment patterns in this article showed up in both formats, so the checklist applies either way.
+
+### Should a Show HN post include a comparison with competitors?
+
+Yes, briefly. Comparison questions were the biggest category in this sample, at 75 comments across 20 of 30 threads. One sentence naming the closest alternative and where it's the better choice works better than a feature table, which tends to read as marketing.
+
+### What should a founder do when a Show HN thread turns negative?
+
+Answer the specific question in each critical comment, concede what's true, and skip the rest. In this sample the same question often landed several times in one thread (tmux-restore got five comparisons), so one clear reply near the top saves you writing it again later.
